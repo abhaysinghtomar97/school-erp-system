@@ -6,11 +6,22 @@ const facultyRoutes = require('./routes/facultyRoutes');
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://school-erp-system-gun1asjse-abhay-singh-tomars-projects.vercel.app"
+];
+
 app.use(cors({
-    origin: 'http://localhost:5173', // ONLY allow your React app to connect
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP actions
-    credentials: true // Required if you ever use cookies or secure sessions
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
 }));
+
 
 app.use(express.json())
 
