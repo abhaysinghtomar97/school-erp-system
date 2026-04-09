@@ -94,17 +94,33 @@ const CreateUser = async (req, res) => {
 
 const getStudents = async (req, res) => {
     try {
-        // Ask Postgres for all users with the TEACHER role
-      const result = await pool.query(
-    "SELECT id, name, email, institutional_id, role, is_first_login, is_active FROM users WHERE role = 'STUDENT' ORDER BY institutional_id ASC"
-);
-        
-        // Send it back cleanly wrapped in a "faculty" object
+        // We use LEFT JOIN so that students who haven't been assigned a class yet still show up in the list!
+        // STRING_AGG combines multiple class names into one string (e.g., "10th Grade Math, 10th Grade Science")
+        const query = `
+            SELECT 
+                u.id, 
+                u.name, 
+                u.email, 
+                u.institutional_id, 
+                u.role, 
+                u.is_first_login, 
+                u.is_active,
+                STRING_AGG(c.name, ', ') AS enrolled_classes
+            FROM users u
+            LEFT JOIN enrollments e ON u.id = e.student_id
+            LEFT JOIN classes c ON e.class_id = c.id
+            WHERE u.role = 'STUDENT'
+            GROUP BY u.id
+            ORDER BY u.institutional_id ASC
+        `;
+
+        const result = await pool.query(query);
+
+        // Make sure the frontend gets the exact key it's expecting
         res.status(200).json({ Students: result.rows });
-        
-        
+
     } catch (err) {
-        console.error('Error fetching faculty:', err.message);
+        console.error('Error fetching students with classes:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -189,8 +205,47 @@ const getClasses = async (req, res) => {
     }
 };
 
-// Update your exports!
+// --- ENROLLMENT MANAGEMENT ---
+
+const getClassRoster = async (req, res) => {
+    const { class_id } = req.params;
+    try {
+        // The JOIN: Look at enrollments, but bring back the Student's actual Name and ID!
+        const result = await pool.query(`
+            SELECT users.id, users.name, users.institutional_id, users.email 
+            FROM users 
+            JOIN enrollments ON users.id = enrollments.student_id 
+            WHERE enrollments.class_id = $1
+            ORDER BY users.name ASC
+        `, [class_id]);
+        
+        res.status(200).json({ roster: result.rows });
+    } catch (err) {
+        console.error('Error fetching roster:', err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+const enrollStudent = async (req, res) => {
+    const { student_id, class_id } = req.body;
+    try {
+        await pool.query(
+            'INSERT INTO enrollments (student_id, class_id) VALUES ($1, $2)',
+            [student_id, class_id]
+        );
+        res.status(201).json({ message: 'Student successfully enrolled!' });
+    } catch (err) {
+        // '23505' is the exact PostgreSQL error code for violating the UNIQUE constraint we set up!
+        if (err.code === '23505') {
+            return res.status(400).json({ message: 'Student is already enrolled in this class.' });
+        }
+        console.error('Error enrolling student:', err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// Update your exports to include the two new functions!
 module.exports = { 
     CreateUser, getStudents, getFaculty, toggleUserStatus, 
-    createClass, getClasses 
+    createClass, getClasses, getClassRoster, enrollStudent 
 };

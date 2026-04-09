@@ -1,5 +1,6 @@
 const pool = require('../config/db'); // Update this path if your db connection is somewhere else!
 
+
 const getMyClasses = async (req, res) => {
     try {
         // MAGIC: We get the ID directly from the token, NOT from the URL!
@@ -18,4 +19,6 @@ const getMyClasses = async (req, res) => {
     }
 };
 
-module.exports = { getMyClasses };
+
+
+module.exports = { getMyClasses};

@@ -1,15 +1,11 @@
-import React, { useState, useContext } from 'react';
-import { AuthContext } from '../../context/AuthContext';
+import React, { useState } from 'react';
 import API from '../../services/api';
 
 const AdminDashboard = () => {
-    const { user, logout } = useContext(AuthContext);
+    // Note: We removed AuthContext, sidebar, and header from here!
     
-    // Form State
     const [formData, setFormData] = useState({ name: '', email: '', role: 'STUDENT' });
     const [loading, setLoading] = useState(false);
-    
-    // Result State
     const [createdUser, setCreatedUser] = useState(null);
     const [error, setError] = useState('');
 
@@ -22,7 +18,6 @@ const AdminDashboard = () => {
         setLoading(true);
         setError('');
         setCreatedUser(null);
-
         try {
             const response = await API.post('/admin/create-user', formData);
             setCreatedUser(response.data.user);
@@ -35,106 +30,62 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="max-w-5xl mx-auto p-6 font-sans">
-            {/* Header Section */}
-            <div className="flex flex-col sm:flex-row justify-between items-center border-b-2 border-gray-200 pb-4">
-                <h2 className="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
-                <div className="mt-4 sm:mt-0 flex items-center gap-4">
-                    {/* Displaying the NAME instead of the ID! */}
-                    <span className="text-gray-600">
-                        Logged in as: <strong className="text-gray-900">{user?.name || 'Admin'}</strong>
-                    </span>
-                    <button 
-                        onClick={logout} 
-                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-200"
-                    >
-                        Logout
-                    </button>
-                </div>
+        <div className="bg-white p-6 rounded shadow-sm border border-gray-100 max-w-5xl mx-auto">
+            <div className="border-b border-gray-100 pb-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Create New User</h2>
+                <p className="text-gray-500 text-sm mt-1">Provision a new student, faculty, or admin account.</p>
             </div>
-
-            {/* Main Content Grid */}
-            <div className="mt-8 flex flex-col md:flex-row gap-8">
-                
-                {/* Left Side: Create User Form */}
-                <div className="flex-1 p-6 bg-gray-50 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Register New User</h3>
-                    
-                    {error && (
-                        <div className="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700">
-                            {error}
+            
+            <div className="flex flex-col md:flex-row gap-8">
+                    {/* Form */}
+                    <div className="flex-1">
+                    {error && <div className="mb-4 p-4 bg-red-50 text-red-700 border-l-4 border-red-500 rounded">{error}</div>}
+                    <form onSubmit={handleCreateUser} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" name="name" value={formData.name} onChange={handleChange} required className="w-full p-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
                         </div>
-                    )}
-                    
-                    <form onSubmit={handleCreateUser} className="flex flex-col gap-4">
-                        <input 
-                            type="text" 
-                            name="name" 
-                            placeholder="Full Name" 
-                            value={formData.name} 
-                            onChange={handleChange} 
-                            required 
-                            className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        />
-                        <input 
-                            type="email" 
-                            name="email" 
-                            placeholder="Email Address" 
-                            value={formData.email} 
-                            onChange={handleChange} 
-                            required 
-                            className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        />
-                        <select 
-                            name="role" 
-                            value={formData.role} 
-                            onChange={handleChange} 
-                            className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
-                        >
-                            <option value="STUDENT">Student</option>
-                            <option value="TEACHER">Faculty / Teacher</option>
-                            <option value="ADMIN">Admin</option>
-                        </select>
-                        
-                        <button 
-                            type="submit" 
-                            disabled={loading}
-                            className={`w-full p-3 mt-2 text-white font-semibold rounded transition duration-200 ${
-                                loading 
-                                ? 'bg-blue-400 cursor-not-allowed' 
-                                : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
-                            }`}
-                        >
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full p-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                            <select name="role" value={formData.role} onChange={handleChange} className="w-full p-2.5 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                <option value="STUDENT">Student</option>
+                                <option value="TEACHER">Faculty / Teacher</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
+                        </div>
+                        <button type="submit" disabled={loading} className={`w-full p-3 font-semibold text-white rounded transition ${loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
                             {loading ? 'Processing...' : 'Create User'}
                         </button>
                     </form>
                 </div>
 
-                {/* Right Side: Success Results */}
+                {/* Results */}
                 <div className="flex-1">
                     {createdUser ? (
-                        <div className="p-8 border-2 border-green-500 bg-green-50 rounded-xl shadow-sm text-center transform transition-all duration-300">
-                            <h3 className="text-2xl font-bold text-green-600 mb-4">🎉 User Created!</h3>
-                            <div className="text-left bg-white p-4 rounded border border-green-200 mb-6">
-                                <p className="text-gray-700 mb-2"><strong>Name:</strong> {createdUser.name}</p>
-                                <p className="text-gray-700 mb-2"><strong>Email:</strong> {createdUser.email}</p>
-                                <p className="text-gray-700"><strong>Role:</strong> {createdUser.role}</p>
+                        <div className="h-full p-6 border border-green-200 bg-green-50 rounded flex flex-col justify-center">
+                            <h4 className="text-xl font-bold text-green-700 mb-4">🎉 Success!</h4>
+                            <div className="space-y-2 text-gray-800">
+                                <p><strong className="text-gray-600">Name:</strong> {createdUser.name}</p>
+                                <p><strong className="text-gray-600">Email:</strong> {createdUser.email}</p>
+                                <p><strong className="text-gray-600">Role:</strong> {createdUser.role}</p>
+                                <div className="mt-6">
+                                    <p className="text-sm text-gray-500 mb-1">Generated Institutional ID:</p>
+                                    <p className="font-mono text-lg font-bold bg-white inline-block px-4 py-2 border border-green-200 rounded shadow-sm text-green-800">
+                                        {createdUser.institutional_id}
+                                    </p>
+                                </div>
                             </div>
-                            
-                            <h2 className="text-3xl font-mono font-bold tracking-widest text-gray-800 bg-white inline-block px-6 py-2 rounded shadow-inner border border-gray-200">
-                                {createdUser.institutional_id}
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-4 italic">
-                                An email has been sent to the user with their temporary password.
-                            </p>
                         </div>
                     ) : (
-                        <div className="h-full min-h-75 flex items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 text-gray-400">
-                            <p className="text-center font-medium">Fill out the form to generate a new Institutional ID.</p>
+                        <div className="h-full min-h-75 flex items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 text-gray-400">
+                            <p className="text-center font-medium">Fill out the form to provision an account and generate an ID.</p>
                         </div>
                     )}
                 </div>
-
             </div>
         </div>
     );

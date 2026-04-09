@@ -6,6 +6,7 @@ import { AuthContext } from '../../context/AuthContext';
 
 const Login = () => {
     const {login} = useContext(AuthContext);
+    const [loading, setloading] = useState(false);
     const [formData, setFormData] = useState({ identifier: '', password: '' });
     console.log("form data: ", formData)
     const [error, setError] = useState('');
@@ -18,6 +19,7 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
+        setloading(true)
 
         try {
             // Hit your Node.js backend
@@ -45,39 +47,70 @@ const Login = () => {
 
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please try again.');
+        } finally{
+            setloading(false);
         }
     };
 
     return (
-        <div style={{ maxWidth: '400px', margin: '50px auto', fontFamily: 'sans-serif' }}>
-            <h2>School ERP Login</h2>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+  <div className="min-h-screen bg-[url('/bg1.png')]  bg-cover bg-center flex items-center justify-center">
 
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <input
-                    type="text"
-                    name="identifier"
-                    placeholder="Email or Institutional ID"
-                    value={formData.identifier}
-                    onChange={handleChange}
-                    required
-                    style={{ padding: '10px' }}
-                />
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    style={{ padding: '10px' }}
-                />
-                <button type="submit" style={{ padding: '10px', background: 'blue', color: 'white' }}>
-                    Login
-                </button>
-            </form>
-        </div>
-    );
+    {/* Overlay (optional but makes UI pop) */}
+    <div className="backdrop-blur-sm absolute inset-0 bg-black/50"></div>
+
+    {/* Login Card */}
+    <div className="relative z-10 w-100 bg-transparent  p-8 rounded-2xl shadow-xl">
+      
+      <h2 className="text-5xl text-amber-100 font-bold text-center mb-6">
+        <span className=' text-blue-300'>Golden Valley School </span>ERP
+      </h2>
+
+      {error && (
+        <p className="text-red-500 text-center mb-4">{error}</p>
+      )}
+
+      <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        
+        <input
+          type="text"
+          name="identifier"
+          placeholder="Email or Institutional ID"
+          value={formData.identifier}
+          onChange={handleChange}
+          required
+          className="px-4 bg-amber-50 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          className="px-4 py-3 bg-amber-50 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        <button
+  type="submit"
+  disabled={loading}
+  className={`flex items-center justify-center gap-2 py-2 rounded-lg font-semibold transition duration-200 
+  ${loading 
+    ? 'bg-blue-400 cursor-not-allowed' 
+    : 'bg-blue-600 hover:bg-blue-700 text-white'
+  }`}
+>
+  {loading && (
+    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+  )}
+  
+  {loading ? 'Logging in...' : 'Login'}
+</button>
+
+      </form>
+    </div>
+  </div>
+);
 };
 
 export default Login;
