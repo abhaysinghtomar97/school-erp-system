@@ -8,7 +8,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://school-erp-system-gun1asjse-abhay-singh-tomars-projects.vercel.app"
+  "https://school-erp-system-gun1asjse-abhay-singh-tomars-projects.vercel.app/api"
 ];
 
 app.use(cors({
