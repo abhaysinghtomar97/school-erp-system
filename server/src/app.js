@@ -6,22 +6,24 @@ const facultyRoutes = require('./routes/facultyRoutes');
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://school-erp-system-gun1asjse-abhay-singh-tomars-projects.vercel.app/api"
-];
-
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+    if (!origin) return callback(null, true);
+
+    // allow localhost
+    if (origin.includes("localhost")) {
+      return callback(null, true);
     }
+
+    // allow ALL vercel deployments
+    if (origin.includes("vercel.app")) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
   },
   credentials: true
 }));
-
 
 app.use(express.json())
 
