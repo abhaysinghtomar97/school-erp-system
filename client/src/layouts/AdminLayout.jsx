@@ -1,12 +1,20 @@
-import React, { useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Link, useLocation, Outlet } from 'react-router-dom';
+import AdminDashboard from '../pages/Admin/AdminDashboard';
 
 const AdminLayout = () => {
     const { user, logout } = useContext(AuthContext);
     const location = useLocation();
 
-    // Sidebar Navigation Links
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isDesktopSidebarExpanded, setIsDesktopSidebarExpanded] = useState(true);
+
+    // ✅ Fluid 20% width (no hardcoding)
+    const sidebarWidth = isDesktopSidebarExpanded ? 'md:w-[20%]' : 'md:w-[5rem]';
+    const contentWidth = isDesktopSidebarExpanded ? 'md:ml-[20%]' : 'md:ml-[5rem]';
+    const hideText = isDesktopSidebarExpanded ? '' : 'md:hidden';
+
     const navLinks = [
         { name: 'Dashboard Home', path: '/admin', icon: '■' },
         { name: 'Create User', path: '/admin/create-user', icon: '➕' },
@@ -17,45 +25,111 @@ const AdminLayout = () => {
     ];
 
     return (
-        <div className="flex h-screen bg-[#f8f5ee] font-sans overflow-hidden">
-            
-            {/* LEFT SIDEBAR (Persistent) */}
-            <aside className="w-64 bg-white shadow-md flex flex-col z-10 border-r border-gray-200">
-                <div className="p-6 bg-blue-50 flex flex-col items-center border-b border-blue-100">
-                    <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-sm">
-                        {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-                    </div>
-                    <h3 className="text-blue-800 font-bold text-lg text-center">
-                        {user?.name || 'Admin User'}
-                    </h3>
-                    <p className="text-gray-500 text-sm mt-1">{user?.institutional_id || 'Admin'}</p>
-                    <span className="mt-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                        {user?.role || 'ADMIN'}
-                    </span>
+        <div className="min-h-screen bg-[#f8f5ee] font-sans">
+
+            {/* ================= HEADER ================= */}
+            <header className="fixed top-0 left-0 right-0 h-16 bg-white shadow-sm flex items-center justify-between px-6 z-40 border-b border-gray-200">
+
+                <div className="flex items-center gap-3">
+
+                    {/* Mobile Menu */}
+                    <button
+                        onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+                        className="md:hidden p-2 rounded hover:bg-gray-100"
+                        aria-label="Open sidebar"
+                    >
+                        ☰
+                    </button>
+
+                    {/* Desktop Toggle (FIXED POSITION → no shift) */}
+                    <button
+                        onClick={() => setIsDesktopSidebarExpanded(prev => !prev)}
+                        className="hidden md:flex items-center justify-center w-10 h-10 rounded hover:bg-gray-100 transition"
+                        aria-label="Toggle sidebar"
+                    >
+                        {isDesktopSidebarExpanded ? '⟨⟨' : '⟩⟩'}
+                    </button>
+
+                    <h1 className="text-lg font-semibold text-gray-800 whitespace-nowrap">
+                        Golden Valley ERP
+                    </h1>
                 </div>
 
-                <nav className="flex-1 overflow-y-auto py-4">
-                    <ul className="text-gray-600 space-y-1">
-                        {navLinks.map((link, index) => {
-                            // Match exact path for Home, otherwise match start of path
-                            const isActive = link.path === '/admin' 
-                                ? location.pathname === '/admin' 
+                <button
+                    onClick={logout}
+                    className="px-4 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 transition text-sm font-semibold border border-red-200"
+                >
+                    🚪 Logout
+                </button>
+            </header>
+
+            {/* ================= MOBILE OVERLAY ================= */}
+            {isMobileSidebarOpen && (
+                <div
+                    className="fixed inset-0  backdrop-blur-xs mt-16 z-40 md:hidden"
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                />
+            )}
+
+            {/* ================= SIDEBAR ================= */}
+            <aside className={`
+                fixed top-16 left-0 bottom-0 bg-white border-r border-gray-200 shadow-sm flex flex-col
+                transition-all duration-300 ease-in-out z-50
+                
+                w-[50%] ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                
+                md:translate-x-0 ${sidebarWidth}
+            `}>
+
+                {/* Profile */}
+                <div className={`p-5 flex flex-col items-center border-b bg-blue-50 ${!isDesktopSidebarExpanded ? 'md:p-3' : ''}`}>
+
+                    <div className={`
+                        rounded-full bg-blue-600 text-white flex items-center justify-center font-bold
+                        ${isDesktopSidebarExpanded ? 'w-16 h-16 text-2xl mb-3' : 'w-10 h-10 text-lg'}
+                    `}>
+                        {user?.name?.charAt(0)?.toUpperCase() || 'A'}
+                    </div>
+
+                    <div className={`text-center ${hideText}`}>
+                        <h3 className="text-blue-800 font-semibold text-sm">
+                            {user?.name || 'Admin User'}
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                            {user?.institutional_id || 'Admin'}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Nav */}
+                <nav className="flex-1 overflow-y-auto py-3">
+                    <ul className="space-y-1">
+                        {navLinks.map((link, i) => {
+                            const isActive = link.path === '/admin'
+                                ? location.pathname === '/admin'
                                 : location.pathname.startsWith(link.path);
-                            
+
                             return (
-                                <li key={index}>
-                                    <Link 
+                                <li key={i}>
+                                    <Link
                                         to={link.path}
-                                        className={`flex items-center px-6 py-3 border-l-4 transition-colors ${
-                                            isActive 
-                                            ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium' 
-                                            : 'border-transparent hover:bg-gray-50 hover:text-gray-900'
-                                        }`}
+                                        onClick={() => setIsMobileSidebarOpen(false)}
+                                        className={`
+                                            flex items-center px-4 py-3 transition-all border-l-4
+                                            ${isActive
+                                                ? 'bg-blue-50 text-blue-600 border-blue-600'
+                                                : 'border-transparent hover:bg-gray-50'}
+                                        `}
                                     >
-                                        <span className={`mr-3 ${isActive ? 'text-blue-600' : 'text-gray-400'}`}>
+                                        <span className={`
+                                            ${isDesktopSidebarExpanded ? 'mr-3' : 'mx-auto'}
+                                        `}>
                                             {link.icon}
-                                        </span> 
-                                        {link.name}
+                                        </span>
+
+                                        <span className={`${hideText}`}>
+                                            {link.name}
+                                        </span>
                                     </Link>
                                 </li>
                             );
@@ -64,25 +138,14 @@ const AdminLayout = () => {
                 </nav>
             </aside>
 
-            {/* MAIN CONTENT WRAPPER */}
-            <main className="flex-1 flex flex-col h-screen overflow-hidden">
-                
-                {/* TOP HEADER (Persistent) */}
-                <header className="bg-white shadow-sm flex items-center justify-between px-6 py-4 z-0">
-                    <div className="flex items-center">
-                        <h1 className="text-xl font-bold text-gray-800">Golden Valley ERP</h1>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <button onClick={logout} className="flex items-center px-4 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100 hover:text-red-700 transition text-sm font-semibold border border-red-200">
-                           <span className="mr-2">🚪</span> Log Out
-                        </button>
-                    </div>
-                </header>
-
-                {/* SCROLLABLE DYNAMIC CONTENT AREA */}
-                <div className="flex-1 overflow-y-auto p-8">
-                    {/* The Outlet renders whatever child route is active! */}
+            {/* ================= MAIN ================= */}
+            <main className={`
+                pt-16 transition-all duration-300
+                ${contentWidth}
+            `}>
+                <div className="p-4 md:p-6">
                     <Outlet />
+
                 </div>
             </main>
         </div>

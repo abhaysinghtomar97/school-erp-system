@@ -2,8 +2,59 @@ const bcrypt = require('bcryptjs'); // Using bcryptjs as seen in your screenshot
 const crypto = require('crypto');
 const pool = require('../config/db');
 // Assuming you exported transporter from your new utils folder!
-const transporter  = require('../utils/sendEmail'); 
+const transporter = require('../utils/sendEmail');
 
+
+const getdashboard = async (req, res) => {
+    try {
+        
+        const userId = req.user.id;
+        
+        
+
+        // 1. Stats Query
+        const statsQuery = `
+            SELECT
+                (SELECT COUNT(*) FROM users WHERE role = 'STUDENT') AS students,
+                (SELECT COUNT(*) FROM users WHERE role = 'TEACHER') AS faculty,
+                (SELECT COUNT(*) FROM classes) AS classes
+        `;
+
+        // 2. Notices Query
+        const noticesQuery = `
+            SELECT n.id, n.title, n.content, n.target_audience, n.created_at, u.name as author_name 
+            FROM notices n
+            LEFT JOIN users u ON n.posted_by = u.id
+            ORDER BY n.created_at DESC
+            LIMIT 5
+        `;
+
+        // 3. User Biodata Query
+        const userQuery = `
+            SELECT id, name, email, institutional_id, role, is_active 
+            FROM users 
+            WHERE id = $1
+        `;
+
+        // 🚀 Execute all 3 queries concurrently for maximum speed
+        const [statsResult, noticesResult, userResult] = await Promise.all([
+            pool.query(statsQuery),
+            pool.query(noticesQuery),
+            pool.query(userQuery, [userId])
+        ]);
+       
+        // Send everything back in one clean package
+        res.status(200).json({
+            stats: statsResult.rows[0],
+            notices: noticesResult.rows,
+            user: userResult.rows[0] // Here is your biodata!
+        });
+
+    } catch (error) {
+        console.error("Dashboard error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
 const CreateUser = async (req, res) => {
     // Notice we do NOT ask for institutional_id from the req.body, we generate it!
     const { name, email, role } = req.body;
@@ -17,15 +68,15 @@ const CreateUser = async (req, res) => {
         // ==========================================
         // 🚀 NEW CUSTOM ID GENERATION LOGIC 
         // ==========================================
-        
+
         // 1. Set prefix based on role (Students get nothing!)
         let prefix = '';
         if (role === 'TEACHER') prefix = 'fc_';
-        else if (role === 'ADMIN') prefix = 'A_'; 
+        else if (role === 'ADMIN') prefix = 'A_';
 
         // 2. Get the 2-digit year (e.g., "26")
         const currentYear = new Date().getFullYear().toString().slice(-2);
-        
+
         // 3. Search database for the highest ID with this exact prefix and year
         const searchPattern = `${prefix}${currentYear}%`;
         const lastUserResult = await pool.query(
@@ -40,11 +91,11 @@ const CreateUser = async (req, res) => {
         // 4. If a user exists, extract their number and add 1
         if (lastUserResult.rows.length > 0) {
             const lastId = lastUserResult.rows[0].institutional_id;
-            
+
             // This math dynamically handles BOTH "fc_" (length 3) and "" (length 0)
-            const prefixAndYearLength = prefix.length + 2; 
+            const prefixAndYearLength = prefix.length + 2;
             const lastSequenceStr = lastId.slice(prefixAndYearLength);
-            
+
             nextSequence = parseInt(lastSequenceStr, 10) + 1;
         }
 
@@ -53,12 +104,12 @@ const CreateUser = async (req, res) => {
 
         // 6. Combine them! (e.g., "" + "26" + "001" = "26001")
         const institutionalId = `${prefix}${currentYear}${paddedSequence}`;
-        
+
         // ==========================================
 
         // Generate temporary password
         const tempPassword = crypto.randomBytes(4).toString('hex');
-        console.log("tempPass:",tempPassword)
+        console.log("tempPass:", tempPassword)
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(tempPassword, salt);
 
@@ -71,16 +122,74 @@ const CreateUser = async (req, res) => {
 
         // Send Email
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"School ERP" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: 'Welcome to the School ERP - Your Account Details',
-            text: `Hello ${name},\n\nYour account has been created.\n\nInstitutional ID: ${institutionalId}\nTemporary Password: ${tempPassword}\n\nYou can log in using either your email or your Institutional ID.`
+            subject: "Your School ERP Account Details",
+
+            // Plain text fallback (important for reliability)
+            text: `Dear ${name},
+
+Your account has been successfully created in the School ERP system.
+
+Institutional ID: ${institutionalId}
+Temporary Password: ${tempPassword}
+
+You can log in using either your email address or your Institutional ID.
+
+For security reasons, please change your password after your first login.
+
+If you did not request this account, please contact the administrator.
+
+Regards,  
+School ERP Team`,
+
+            // HTML version (professional look)
+            html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333;">
+            
+            <h2 style="color: #2c3e50;">Welcome to School ERP</h2>
+            
+            <p>Dear <strong>${name}</strong>,</p>
+            
+            <p>
+                We are pleased to inform you that your account has been successfully created in the 
+                <strong>School ERP system</strong>.
+            </p>
+
+            <div style="background: #f4f6f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Institutional ID:</strong> ${institutionalId}</p>
+                <p style="margin: 5px 0;"><strong>Temporary Password:</strong> ${tempPassword}</p>
+            </div>
+
+            <p>
+                You can log in using either your registered email address or your Institutional ID.
+            </p>
+
+            <p style="color: #e74c3c;">
+                <strong>Note:</strong> For security reasons, please change your password after your first login.
+            </p>
+
+            <p>
+                If you did not request this account, please contact the system administrator immediately.
+            </p>
+
+            <br/>
+
+            <p>Warm regards,<br/><strong>School ERP Team</strong></p>
+
+            <hr style="margin-top: 30px;" />
+
+            <p style="font-size: 12px; color: #888;">
+                This is an automated message. Please do not reply to this email.
+            </p>
+        </div>
+    `
         };
 
         await transporter.sendMail(mailOptions);
 
-        res.status(201).json({ 
-            message: 'User created successfully', 
+        res.status(201).json({
+            message: 'User created successfully',
             user: newUser.rows[0]
         });
 
@@ -130,9 +239,9 @@ const getFaculty = async (req, res) => {
         const result = await pool.query(
             "SELECT id, name, email, institutional_id, role, is_first_login, is_active FROM users WHERE role = 'TEACHER' ORDER BY institutional_id ASC"
         );
-        
+
         res.status(200).json({ faculty: result.rows });
-        
+
     } catch (err) {
         // This prints the exact reason it crashed to your terminal!
         console.error('Error fetching faculty:', err.message);
@@ -141,8 +250,8 @@ const getFaculty = async (req, res) => {
 };
 
 const toggleUserStatus = async (req, res) => {
-    const { id } = req.params; 
-    const { is_active } = req.body; 
+    const { id } = req.params;
+    const { is_active } = req.body;
 
     try {
         const result = await pool.query(
@@ -197,7 +306,7 @@ const getClasses = async (req, res) => {
             LEFT JOIN users ON classes.homeroom_teacher_id = users.id 
             ORDER BY classes.created_at DESC
         `);
-        
+
         res.status(200).json({ classes: result.rows });
     } catch (err) {
         console.error('Error fetching classes:', err.message);
@@ -218,7 +327,7 @@ const getClassRoster = async (req, res) => {
             WHERE enrollments.class_id = $1
             ORDER BY users.name ASC
         `, [class_id]);
-        
+
         res.status(200).json({ roster: result.rows });
     } catch (err) {
         console.error('Error fetching roster:', err.message);
@@ -245,7 +354,7 @@ const enrollStudent = async (req, res) => {
 };
 
 // Update your exports to include the two new functions!
-module.exports = { 
-    CreateUser, getStudents, getFaculty, toggleUserStatus, 
-    createClass, getClasses, getClassRoster, enrollStudent 
+module.exports = {
+    CreateUser, getStudents, getFaculty, toggleUserStatus,
+    createClass, getClasses, getClassRoster, enrollStudent, getdashboard
 };

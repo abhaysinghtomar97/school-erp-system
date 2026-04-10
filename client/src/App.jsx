@@ -16,6 +16,7 @@ import ManageStudents from './pages/Admin/ManageStudents';
 import ManageFaculty from './pages/Admin/ManageFaculty';
 import ManageClasses from './pages/Admin/ManageClasses';
 import ManageEnrollments from './pages/Admin/ManageEnrollments';
+import CreateUser from './pages/Admin/CreateUser';
 
 function App() {
   return (
@@ -41,8 +42,9 @@ function App() {
             </ProtectedRoute>
           }>
             {/* These child routes render inside the <Outlet /> of AdminLayout */}
-            <Route index element={<div>Welcome to Admin Home (You can put stats here!)</div>} />
-            <Route path="create-user" element={<AdminDashboard />} /> 
+            
+            <Route path="" element={<AdminDashboard />} /> 
+            <Route path="create-user" element={<CreateUser />} /> 
             <Route path="students" element={<ManageStudents />} />
             <Route path="faculty" element={<ManageFaculty />} />
             <Route path="classes" element={<ManageClasses />} />
@@ -58,6 +60,12 @@ function App() {
 
           {/* 🔒 STUDENT ROUTES 🔒 */}
           <Route path="/student" element={
+            <ProtectedRoute allowedRoles={['STUDENT']}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } />
+          /* 🔒 NOTICE ROUTES 🔒 */
+          <Route path="/notice" element={
             <ProtectedRoute allowedRoles={['STUDENT']}>
               <StudentDashboard />
             </ProtectedRoute>
