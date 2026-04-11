@@ -68,8 +68,7 @@ const CreateUser = async (req, res) => {
         // Check if user exists
         const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
-            // Release client before returning
-            client.release();
+           
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
