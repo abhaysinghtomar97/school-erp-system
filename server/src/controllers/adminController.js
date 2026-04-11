@@ -394,8 +394,18 @@ const getSubjectsByClass = async (req, res) => {
     }
 };
 
-export {
-    CreateUser, getStudents, getFaculty, toggleUserStatus,
-    createClass, getClasses, getClassRoster, enrollStudent, getAllPeriods, getdashboard, getClassTimetable,
-     assignTimetableSlot, getSubjectsByClass
+module.exports = {
+    CreateUser,
+    getStudents,
+    getFaculty,
+    toggleUserStatus,
+    createClass,
+    getClasses,
+    getClassRoster,
+    enrollStudent,
+    getAllPeriods,
+    getdashboard,
+    getClassTimetable,
+    assignTimetableSlot,
+    getSubjectsByClass
 };
