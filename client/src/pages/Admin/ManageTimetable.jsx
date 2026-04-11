@@ -31,6 +31,9 @@ const ManageTimetable = () => {
                 // 3. THEN it asks for faculty, and WAITS until it finishes.
                 const teacherRes = await axios.get('/api/admin/faculty');
                 // Extract the arrays safely
+                console.log("clas: ",classRes)
+                console.log("pero: ",periodRes)
+                console.log("teac: ",teacherRes)
                 setClasses(classRes.data.classes || classRes.data || []);
                 setPeriods(periodRes.data.data || periodRes.data || []);
                 setTeachers(teacherRes.data.faculty || teacherRes.data || []);
