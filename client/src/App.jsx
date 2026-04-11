@@ -17,6 +17,7 @@ import ManageFaculty from './pages/Admin/ManageFaculty';
 import ManageClasses from './pages/Admin/ManageClasses';
 import ManageEnrollments from './pages/Admin/ManageEnrollments';
 import CreateUser from './pages/Admin/CreateUser';
+import ManageTimetable from './pages/Admin/ManageTimetable';
 
 function App() {
   return (
@@ -42,13 +43,16 @@ function App() {
             </ProtectedRoute>
           }>
             {/* These child routes render inside the <Outlet /> of AdminLayout */}
-            
-            <Route path="" element={<AdminDashboard />} /> 
-            <Route path="create-user" element={<CreateUser />} /> 
+
+            <Route path="" element={<AdminDashboard />} />
+            <Route path="create-user" element={<CreateUser />} />
             <Route path="students" element={<ManageStudents />} />
             <Route path="faculty" element={<ManageFaculty />} />
             <Route path="classes" element={<ManageClasses />} />
             <Route path="enrollments" element={<ManageEnrollments />} />
+
+            <Route path="timetable" element={<ManageTimetable/>} />
+
           </Route>
 
           {/* 🔒 FACULTY ROUTES 🔒 */}

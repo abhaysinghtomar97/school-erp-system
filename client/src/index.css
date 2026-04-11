@@ -1,2 +1,33 @@
 @import "tailwindcss";
 
+/* Styling for the blank 'skeleton-option' elements */
+.skeleton-option {
+    height: 1.5rem;
+    /* Match your dropdown's item height */
+    background-color: #f3f4f6;
+    /* A light grey background */
+    border-radius: 4px;
+    /* Soften the corners */
+    margin-bottom: 0.5rem;
+    /* Add spacing between items */
+    cursor: default;
+
+    /* === The Shimmer Animation === */
+    background-image: linear-gradient(110deg,
+            #f3f4f6 8%,
+            #e5e7eb 18%,
+            /* Shimmer color (slightly darker grey) */
+            #f3f4f6 33%);
+    background-size: 200% 100%;
+    animation: 1.5s shimmer linear infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -100% 0;
+    }
+
+    100% {
+        background-position: 100% 0;
+    }
+}

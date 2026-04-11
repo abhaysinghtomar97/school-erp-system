@@ -1,17 +1,12 @@
-const bcrypt = require('bcryptjs'); // Using bcryptjs as seen in your screenshot
-const crypto = require('crypto');
-const pool = require('../config/db');
-// Assuming you exported transporter from your new utils folder!
-// const transporter = require('../utils/sendEmail');
-const {Resend} = require('resend')
-
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import pool from '../config/db.js';
+// import transporter from '../utils/sendEmail.js';
+import { Resend } from 'resend';
 
 const getdashboard = async (req, res) => {
     try {
-
         const userId = req.user.id;
-
-
 
         // 1. Stats Query
         const statsQuery = `
@@ -57,13 +52,13 @@ const getdashboard = async (req, res) => {
     }
 };
 
-// create user 
+// Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const CreateUser = async (req, res) => {
     const { name, email, role } = req.body;
 
-    // 1. Get a dedicated client from the pool for a Transaction
+    // FIX: Renamed local variable from 'pool' to 'client' to avoid shadowing the global database pool
     const client = await pool.connect();
 
     try {
@@ -107,6 +102,7 @@ const CreateUser = async (req, res) => {
         // Generate temporary password
         const tempPassword = crypto.randomBytes(4).toString('hex');
         console.log("tempPass generated for:", email);
+
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(tempPassword, salt);
 
@@ -129,8 +125,6 @@ const CreateUser = async (req, res) => {
         // ==========================================
         // FIRE AND FORGET EMAIL LOGIC (VIA RESEND)
         // ==========================================
-
-        // We use .then() and .catch() instead of await so it runs in the background
         resend.emails.send({
             from: 'Golden Valley School ERP <onboarding@resend.dev>', // Resend's default testing domain
             to: email,
@@ -151,7 +145,7 @@ const CreateUser = async (req, res) => {
             if (error) {
                 console.error(`Background Email Failed for ${email}:`, error);
             } else {
-                console.log(`Email successfully sent to ${email} via Resend! ID:`, data.id);
+                console.log(`Email successfully sent to ${email} via Resend! ID:`, data?.id);
             }
         }).catch(err => {
             console.error(`Fatal error in email background process for ${email}:`, err.message);
@@ -174,8 +168,6 @@ const CreateUser = async (req, res) => {
 
 const getStudents = async (req, res) => {
     try {
-        // We use LEFT JOIN so that students who haven't been assigned a class yet still show up in the list!
-        // STRING_AGG combines multiple class names into one string (e.g., "10th Grade Math, 10th Grade Science")
         const query = `
             SELECT 
                 u.id, 
@@ -195,8 +187,6 @@ const getStudents = async (req, res) => {
         `;
 
         const result = await pool.query(query);
-
-        // Make sure the frontend gets the exact key it's expecting
         res.status(200).json({ Students: result.rows });
 
     } catch (err) {
@@ -204,17 +194,15 @@ const getStudents = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
 const getFaculty = async (req, res) => {
     try {
-        // Updated to include the new is_active column!
         const result = await pool.query(
             "SELECT id, name, email, institutional_id, role, is_first_login, is_active FROM users WHERE role = 'TEACHER' ORDER BY institutional_id ASC"
         );
-
         res.status(200).json({ faculty: result.rows });
 
     } catch (err) {
-        // This prints the exact reason it crashed to your terminal!
         console.error('Error fetching faculty:', err.message);
         res.status(500).json({ message: 'Server Error' });
     }
@@ -242,14 +230,12 @@ const toggleUserStatus = async (req, res) => {
 };
 
 
-
 // --- CLASS MANAGEMENT ---
 
 const createClass = async (req, res) => {
     const { name, room_number, homeroom_teacher_id } = req.body;
 
     try {
-        // If they didn't select a teacher, we must send NULL to PostgreSQL, not an empty string
         const teacherId = homeroom_teacher_id ? homeroom_teacher_id : null;
 
         const result = await pool.query(
@@ -266,7 +252,6 @@ const createClass = async (req, res) => {
 
 const getClasses = async (req, res) => {
     try {
-        // The Magic JOIN: Fetch the class, AND go grab the Teacher's name from the users table!
         const result = await pool.query(`
             SELECT 
                 classes.id, 
@@ -285,12 +270,12 @@ const getClasses = async (req, res) => {
     }
 };
 
+
 // --- ENROLLMENT MANAGEMENT ---
 
 const getClassRoster = async (req, res) => {
     const { class_id } = req.params;
     try {
-        // The JOIN: Look at enrollments, but bring back the Student's actual Name and ID!
         const result = await pool.query(`
             SELECT users.id, users.name, users.institutional_id, users.email 
             FROM users 
@@ -315,7 +300,6 @@ const enrollStudent = async (req, res) => {
         );
         res.status(201).json({ message: 'Student successfully enrolled!' });
     } catch (err) {
-        // '23505' is the exact PostgreSQL error code for violating the UNIQUE constraint we set up!
         if (err.code === '23505') {
             return res.status(400).json({ message: 'Student is already enrolled in this class.' });
         }
@@ -324,23 +308,36 @@ const enrollStudent = async (req, res) => {
     }
 };
 
-//  ----time tablee---
-// adminController.js
 
-export const getTimetableByClass = async (req, res) => {
+// --- TIMETABLE MANAGEMENT ---
+
+// 1. Get all time slots
+const getAllPeriods = async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM periods ORDER BY start_time ASC");
+        res.status(200).json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// 2. Fetch formatted timetable for a specific class
+const getClassTimetable = async (req, res) => {
     const { classId } = req.params;
     try {
         const query = `
-            SELECT t.day_of_week, t.period_id, sub.name as subject_name, u.name as teacher_name, p.start_time
+            SELECT t.id, t.day_of_week, t.period_id, 
+                   s.name as subject_name, u.name as teacher_name, 
+                   p.start_time, p.end_time
             FROM timetable t
-            JOIN subjects sub ON t.subject_id = sub.id
+            JOIN subjects s ON t.subject_id = s.id
             JOIN users u ON t.teacher_id = u.id
             JOIN periods p ON t.period_id = p.id
             WHERE t.class_id = $1
         `;
-        const result = await client.query(query, [classId]);
+        const result = await pool.query(query, [classId]);
 
-        // Transform into an efficient Map for the Frontend
+        // Format data for O(1) frontend lookup
         const scheduleMap = {};
         result.rows.forEach(row => {
             if (!scheduleMap[row.day_of_week]) scheduleMap[row.day_of_week] = {};
@@ -350,13 +347,14 @@ export const getTimetableByClass = async (req, res) => {
             };
         });
 
-        res.status(200).json(scheduleMap);
+        res.status(200).json({ success: true, data: scheduleMap });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 
-export const assignSlot = async (req, res) => {
+// 3. Assign or update a slot
+const assignTimetableSlot = async (req, res) => {
     const { day, periodId, classId, subjectId, teacherId } = req.body;
     try {
         const query = `
@@ -365,18 +363,39 @@ export const assignSlot = async (req, res) => {
             ON CONFLICT (class_id, day_of_week, period_id) 
             DO UPDATE SET subject_id = EXCLUDED.subject_id, teacher_id = EXCLUDED.teacher_id;
         `;
-        await client.query(query, [day, periodId, classId, subjectId, teacherId]);
-        res.status(201).json({ message: "Slot updated successfully" });
+        await pool.query(query, [day, periodId, classId, subjectId, teacherId]);
+        res.status(201).json({ success: true, message: "Slot updated" });
     } catch (err) {
-        if (err.code === '23505') { // Postgres Unique Violation code
-            return res.status(400).json({ error: "Teacher is already busy in another class during this period!" });
+        if (err.code === '23505') {
+            return res.status(400).json({ success: false, message: "Conflict: Teacher already busy!" });
         }
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ success: false, message: err.message });
     }
 };
 
-// Update your exports to include the two new functions!
-module.exports = {
+// --- SUBJECTS MANAGEMENT ---
+
+const getSubjectsByClass = async (req, res) => {
+    const { classId } = req.params;
+    try {
+        const query = `
+            SELECT id, name, code, teacher_id 
+            FROM subjects 
+            WHERE class_id = $1
+            ORDER BY name ASC;
+        `;
+        const result = await pool.query(query, [classId]);
+
+        // Return in the standard wrapper format
+        res.status(200).json({ success: true, data: result.rows });
+    } catch (err) {
+        console.error("Error fetching subjects for class:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+export {
     CreateUser, getStudents, getFaculty, toggleUserStatus,
-    createClass, getClasses, getClassRoster, enrollStudent, getdashboard
+    createClass, getClasses, getClassRoster, enrollStudent, getAllPeriods, getdashboard, getClassTimetable,
+     assignTimetableSlot, getSubjectsByClass
 };
