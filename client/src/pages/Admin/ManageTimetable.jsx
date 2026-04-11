@@ -22,12 +22,14 @@ const ManageTimetable = () => {
         const fetchSetupData = async () => {
             try {
                 // Fire all three requests at the exact same time
-                const [classRes, periodRes, teacherRes] = await Promise.all([
-                    axios.get('/api/admin/classes'),
-                    axios.get('/api/admin/periods'),
-                    axios.get('/api/admin/faculty')
-                ]);
+                // 1. JavaScript asks for classes, and WAITS until it finishes...
+                const classRes = await axios.get('/api/admin/classes');
 
+                // 2. THEN it asks for periods, and WAITS until it finishes...
+                const periodRes = await axios.get('/api/admin/periods');
+
+                // 3. THEN it asks for faculty, and WAITS until it finishes.
+                const teacherRes = await axios.get('/api/admin/faculty');
                 // Extract the arrays safely
                 setClasses(classRes.data.classes || classRes.data || []);
                 setPeriods(periodRes.data.data || periodRes.data || []);
@@ -99,7 +101,7 @@ const ManageTimetable = () => {
                 className="border p-2 mb-6 w-full max-w-xs rounded"
                 value={selectedClass}
                 onChange={handleClassChange}
-                // disabled={isLoading} 
+            // disabled={isLoading} 
             >
                 <option value="">
                     {isLoading ? 'Loading classes...' : 'Select a Class'}
