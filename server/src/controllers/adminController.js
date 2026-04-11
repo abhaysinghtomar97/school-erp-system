@@ -1,12 +1,16 @@
-import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
-import pool from '../config/db.js';
-// import transporter from '../utils/sendEmail.js';
-import { Resend } from 'resend';
+const bcrypt = require('bcryptjs'); // Using bcryptjs as seen in your screenshot
+const crypto = require('crypto');
+const pool = require('../config/db');
+// Assuming you exported transporter from your new utils folder!
+const transporter = require('../utils/sendEmail');
+
 
 const getdashboard = async (req, res) => {
     try {
+        
         const userId = req.user.id;
+        
+        
 
         // 1. Stats Query
         const statsQuery = `
@@ -51,14 +55,10 @@ const getdashboard = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
-
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const CreateUser = async (req, res) => {
     const { name, email, role } = req.body;
-
-    // FIX: Renamed local variable from 'pool' to 'client' to avoid shadowing the global database pool
+    
+    // 1. Get a dedicated client from the pool for a Transaction
     const client = await pool.connect();
 
     try {
@@ -125,8 +125,9 @@ const CreateUser = async (req, res) => {
         // ==========================================
         // FIRE AND FORGET EMAIL LOGIC (VIA RESEND)
         // ==========================================
-        resend.emails.send({
-            from: 'Golden Valley School ERP <onboarding@resend.dev>', // Resend's default testing domain
+        
+        const mailOptions = {
+            from: `"Golden Valley School ERP" <${process.env.EMAIL_USER}>`,
             to: email,
             subject: "Your ERP Account Details",
             html: `
@@ -141,14 +142,11 @@ const CreateUser = async (req, res) => {
                     <p style="color: #e74c3c;"><strong>Note:</strong> Please change your password after your first login.</p>
                 </div>
             `
-        }).then(({ data, error }) => {
-            if (error) {
-                console.error(`Background Email Failed for ${email}:`, error);
-            } else {
-                console.log(`Email successfully sent to ${email} via Resend! ID:`, data?.id);
-            }
-        }).catch(err => {
-            console.error(`Fatal error in email background process for ${email}:`, err.message);
+        };
+
+        // Notice there is NO 'await' here. We handle errors with .catch() so it doesn't crash the server.
+        transporter.sendMail(mailOptions).catch(emailError => {
+            console.error(`Background Email Failed for ${email}:`, emailError.message);
         });
 
     } catch (err) {
@@ -165,6 +163,8 @@ const CreateUser = async (req, res) => {
         client.release();
     }
 };
+
+
 
 const getStudents = async (req, res) => {
     try {
