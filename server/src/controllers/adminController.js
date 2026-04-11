@@ -56,30 +56,33 @@ const getdashboard = async (req, res) => {
     }
 };
 const CreateUser = async (req, res) => {
-    // Notice we do NOT ask for institutional_id from the req.body, we generate it!
     const { name, email, role } = req.body;
+    
+    // 1. Get a dedicated client from the pool for a Transaction
+    const client = await pool.connect();
 
     try {
-        const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        // Start Database Transaction
+        await client.query('BEGIN');
+
+        // Check if user exists
+        const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
+            // Release client before returning
+            client.release();
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
-        // ==========================================
-        // 🚀 NEW CUSTOM ID GENERATION LOGIC 
-        // ==========================================
-
-        // 1. Set prefix based on role (Students get nothing!)
+        // Set prefix based on role
         let prefix = '';
         if (role === 'TEACHER') prefix = 'fc_';
         else if (role === 'ADMIN') prefix = 'A_';
 
-        // 2. Get the 2-digit year (e.g., "26")
         const currentYear = new Date().getFullYear().toString().slice(-2);
-
-        // 3. Search database for the highest ID with this exact prefix and year
         const searchPattern = `${prefix}${currentYear}%`;
-        const lastUserResult = await pool.query(
+
+        // Get last ID
+        const lastUserResult = await client.query(
             `SELECT institutional_id FROM users 
              WHERE institutional_id LIKE $1 
              ORDER BY institutional_id DESC LIMIT 1`,
@@ -88,114 +91,77 @@ const CreateUser = async (req, res) => {
 
         let nextSequence = 1;
 
-        // 4. If a user exists, extract their number and add 1
         if (lastUserResult.rows.length > 0) {
             const lastId = lastUserResult.rows[0].institutional_id;
-
-            // This math dynamically handles BOTH "fc_" (length 3) and "" (length 0)
             const prefixAndYearLength = prefix.length + 2;
             const lastSequenceStr = lastId.slice(prefixAndYearLength);
-
             nextSequence = parseInt(lastSequenceStr, 10) + 1;
         }
 
-        // 5. Force the sequence to be 3 digits (1 becomes "001")
         const paddedSequence = String(nextSequence).padStart(3, '0');
-
-        // 6. Combine them! (e.g., "" + "26" + "001" = "26001")
         const institutionalId = `${prefix}${currentYear}${paddedSequence}`;
-
-        // ==========================================
 
         // Generate temporary password
         const tempPassword = crypto.randomBytes(4).toString('hex');
-        console.log("tempPass:", tempPassword)
+        console.log("tempPass generated for:", email);
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-        // Insert the user into the database (MAKE SURE TO INCLUDE institutional_id)
-        const newUser = await pool.query(
+        // Insert the user
+        const newUser = await client.query(
             `INSERT INTO users (name, email, password_hash, role, is_first_login, institutional_id) 
              VALUES ($1, $2, $3, $4, true, $5) RETURNING id, name, email, institutional_id, role`,
             [name, email, passwordHash, role, institutionalId]
         );
 
-        // Send Email
-        const mailOptions = {
-            from: `"School ERP" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: "Your School ERP Account Details",
+        // COMMIT the transaction (Saves everything permanently)
+        await client.query('COMMIT');
 
-            // Plain text fallback (important for reliability)
-            text: `Dear ${name},
-
-Your account has been successfully created in the School ERP system.
-
-Institutional ID: ${institutionalId}
-Temporary Password: ${tempPassword}
-
-You can log in using either your email address or your Institutional ID.
-
-For security reasons, please change your password after your first login.
-
-If you did not request this account, please contact the administrator.
-
-Regards,  
-School ERP Team`,
-
-            // HTML version (professional look)
-            html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333;">
-            
-            <h2 style="color: #2c3e50;">Welcome to School ERP</h2>
-            
-            <p>Dear <strong>${name}</strong>,</p>
-            
-            <p>
-                We are pleased to inform you that your account has been successfully created in the 
-                <strong>School ERP system</strong>.
-            </p>
-
-            <div style="background: #f4f6f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 5px 0;"><strong>Institutional ID:</strong> ${institutionalId}</p>
-                <p style="margin: 5px 0;"><strong>Temporary Password:</strong> ${tempPassword}</p>
-            </div>
-
-            <p>
-                You can log in using either your registered email address or your Institutional ID.
-            </p>
-
-            <p style="color: #e74c3c;">
-                <strong>Note:</strong> For security reasons, please change your password after your first login.
-            </p>
-
-            <p>
-                If you did not request this account, please contact the system administrator immediately.
-            </p>
-
-            <br/>
-
-            <p>Warm regards,<br/><strong>School ERP Team</strong></p>
-
-            <hr style="margin-top: 30px;" />
-
-            <p style="font-size: 12px; color: #888;">
-                This is an automated message. Please do not reply to this email.
-            </p>
-        </div>
-    `
-        };
-
-        await transporter.sendMail(mailOptions);
-
+        // Send Success Response IMMEDIATELY (Don't wait for the email to send)
         res.status(201).json({
-            message: 'User created successfully',
+            message: 'User created successfully. Email is being sent.',
             user: newUser.rows[0]
         });
 
+        // ==========================================
+        // FIRE AND FORGET EMAIL LOGIC
+        // ==========================================
+        const mailOptions = {
+            from: `"Golden Valley School ERP" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Your ERP Account Details",
+            text: `Dear ${name},\n\nYour account has been successfully created.\n\nInstitutional ID: ${institutionalId}\nTemporary Password: ${tempPassword}\n\nFor security reasons, please change your password after your first login.\n\nRegards,\nERP Team`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333;">
+                    <h2 style="color: #2c3e50;">Welcome to the ERP System</h2>
+                    <p>Dear <strong>${name}</strong>,</p>
+                    <p>Your account has been successfully created.</p>
+                    <div style="background: #f4f6f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                        <p style="margin: 5px 0;"><strong>Institutional ID:</strong> ${institutionalId}</p>
+                        <p style="margin: 5px 0;"><strong>Temporary Password:</strong> ${tempPassword}</p>
+                    </div>
+                    <p style="color: #e74c3c;"><strong>Note:</strong> Please change your password after your first login.</p>
+                </div>
+            `
+        };
+
+        // Notice there is NO 'await' here. We handle errors with .catch() so it doesn't crash the server.
+        transporter.sendMail(mailOptions).catch(emailError => {
+            console.error(`Background Email Failed for ${email}:`, emailError.message);
+        });
+
     } catch (err) {
+        // If anything fails in the try block, undo any database changes
+        await client.query('ROLLBACK');
         console.error('Error creating user:', err.message);
-        res.status(500).json({ message: 'Server Error' });
+        
+        // Ensure we only send a response if one hasn't been sent yet
+        if (!res.headersSent) {
+            res.status(500).json({ message: 'Server Error during user creation' });
+        }
+    } finally {
+        // ALWAYS release the client back to the pool, whether it succeeded or failed
+        client.release();
     }
 };
 
