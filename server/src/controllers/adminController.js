@@ -2,15 +2,16 @@ const bcrypt = require('bcryptjs'); // Using bcryptjs as seen in your screenshot
 const crypto = require('crypto');
 const pool = require('../config/db');
 // Assuming you exported transporter from your new utils folder!
-const transporter = require('../utils/sendEmail');
+// const transporter = require('../utils/sendEmail');
+const {Resend} = require('resend')
 
 
 const getdashboard = async (req, res) => {
     try {
-        
+
         const userId = req.user.id;
-        
-        
+
+
 
         // 1. Stats Query
         const statsQuery = `
@@ -42,7 +43,7 @@ const getdashboard = async (req, res) => {
             pool.query(noticesQuery),
             pool.query(userQuery, [userId])
         ]);
-       
+
         // Send everything back in one clean package
         res.status(200).json({
             stats: statsResult.rows[0],
@@ -55,9 +56,13 @@ const getdashboard = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+// create user 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 const CreateUser = async (req, res) => {
     const { name, email, role } = req.body;
-    
+
     // 1. Get a dedicated client from the pool for a Transaction
     const client = await pool.connect();
 
@@ -68,7 +73,6 @@ const CreateUser = async (req, res) => {
         // Check if user exists
         const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
-           
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
@@ -123,14 +127,14 @@ const CreateUser = async (req, res) => {
         });
 
         // ==========================================
-        // FIRE AND FORGET EMAIL LOGIC
+        // FIRE AND FORGET EMAIL LOGIC (VIA RESEND)
         // ==========================================
-        
-        const mailOptions = {
-            from: `"Golden Valley School ERP" <${process.env.EMAIL_USER}>`,
+
+        // We use .then() and .catch() instead of await so it runs in the background
+        resend.emails.send({
+            from: 'Golden Valley School ERP <onboarding@resend.dev>', // Resend's default testing domain
             to: email,
             subject: "Your ERP Account Details",
-            text: `Dear ${name},\n\nYour account has been successfully created.\n\nInstitutional ID: ${institutionalId}\nTemporary Password: ${tempPassword}\n\nFor security reasons, please change your password after your first login.\n\nRegards,\nERP Team`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333;">
                     <h2 style="color: #2c3e50;">Welcome to the ERP System</h2>
@@ -143,18 +147,21 @@ const CreateUser = async (req, res) => {
                     <p style="color: #e74c3c;"><strong>Note:</strong> Please change your password after your first login.</p>
                 </div>
             `
-        };
-
-        // Notice there is NO 'await' here. We handle errors with .catch() so it doesn't crash the server.
-        transporter.sendMail(mailOptions).catch(emailError => {
-            console.error(`Background Email Failed for ${email}:`, emailError.message);
+        }).then(({ data, error }) => {
+            if (error) {
+                console.error(`Background Email Failed for ${email}:`, error);
+            } else {
+                console.log(`Email successfully sent to ${email} via Resend! ID:`, data.id);
+            }
+        }).catch(err => {
+            console.error(`Fatal error in email background process for ${email}:`, err.message);
         });
 
     } catch (err) {
         // If anything fails in the try block, undo any database changes
         await client.query('ROLLBACK');
         console.error('Error creating user:', err.message);
-        
+
         // Ensure we only send a response if one hasn't been sent yet
         if (!res.headersSent) {
             res.status(500).json({ message: 'Server Error during user creation' });
@@ -164,8 +171,6 @@ const CreateUser = async (req, res) => {
         client.release();
     }
 };
-
-
 
 const getStudents = async (req, res) => {
     try {
@@ -316,6 +321,57 @@ const enrollStudent = async (req, res) => {
         }
         console.error('Error enrolling student:', err.message);
         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+//  ----time tablee---
+// adminController.js
+
+export const getTimetableByClass = async (req, res) => {
+    const { classId } = req.params;
+    try {
+        const query = `
+            SELECT t.day_of_week, t.period_id, sub.name as subject_name, u.name as teacher_name, p.start_time
+            FROM timetable t
+            JOIN subjects sub ON t.subject_id = sub.id
+            JOIN users u ON t.teacher_id = u.id
+            JOIN periods p ON t.period_id = p.id
+            WHERE t.class_id = $1
+        `;
+        const result = await client.query(query, [classId]);
+
+        // Transform into an efficient Map for the Frontend
+        const scheduleMap = {};
+        result.rows.forEach(row => {
+            if (!scheduleMap[row.day_of_week]) scheduleMap[row.day_of_week] = {};
+            scheduleMap[row.day_of_week][row.period_id] = {
+                subject: row.subject_name,
+                teacher: row.teacher_name
+            };
+        });
+
+        res.status(200).json(scheduleMap);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export const assignSlot = async (req, res) => {
+    const { day, periodId, classId, subjectId, teacherId } = req.body;
+    try {
+        const query = `
+            INSERT INTO timetable (day_of_week, period_id, class_id, subject_id, teacher_id)
+            VALUES ($1, $2, $3, $4, $5)
+            ON CONFLICT (class_id, day_of_week, period_id) 
+            DO UPDATE SET subject_id = EXCLUDED.subject_id, teacher_id = EXCLUDED.teacher_id;
+        `;
+        await client.query(query, [day, periodId, classId, subjectId, teacherId]);
+        res.status(201).json({ message: "Slot updated successfully" });
+    } catch (err) {
+        if (err.code === '23505') { // Postgres Unique Violation code
+            return res.status(400).json({ error: "Teacher is already busy in another class during this period!" });
+        }
+        res.status(500).json({ error: err.message });
     }
 };
 
