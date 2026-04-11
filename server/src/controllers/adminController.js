@@ -125,6 +125,7 @@ const CreateUser = async (req, res) => {
         // ==========================================
         // FIRE AND FORGET EMAIL LOGIC
         // ==========================================
+        
         const mailOptions = {
             from: `"Golden Valley School ERP" <${process.env.EMAIL_USER}>`,
             to: email,
