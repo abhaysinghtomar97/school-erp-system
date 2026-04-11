@@ -1,16 +1,19 @@
 import axios from 'axios';
 
-const API = axios.create({
-    baseURL: import.meta.env.VITE_API_URL ,  //backend api
+const api = axios.create({
+    // This is the magic line! 
+    // It looks for your Render URL in Vercel/Netlify. If it doesn't find one, it uses localhost.
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
 });
 
-// Automatically attach the JWT token to every request if the user is logged in
-API.interceptors.request.use((req) => {
-    const token = localStorage.getItem('token');
+// Optional: If you eventually want to secure your routes again, 
+// your token logic stays right here!
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token'); 
     if (token) {
-        req.headers.Authorization = `Bearer ${token}`;
+        config.headers.Authorization = `Bearer ${token}`;
     }
-    return req;
+    return config;
 });
 
-export default API;
+export default api;
