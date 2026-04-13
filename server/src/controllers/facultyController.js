@@ -2,24 +2,25 @@ const pool = require('../config/db'); // Adjust this to match your DB connection
 
 // --- 1. Get Teacher's Schedule ---
 // Fetches the timetable specifically for the logged-in teacher
+// --- 1. Get Teacher's Schedule ---
 const getMySchedule = async (req, res) => {
     try {
-        // req.user should be populated by your authentication middleware
         const teacherId = req.user.id; 
 
-        // Join timetable with classes and subjects to get human-readable data
+        // Corrected SQL: Uses p.start_time and joins the periods table
         const query = `
             SELECT 
                 t.id AS timetable_id,
                 t.day_of_week,
-                t.start_time,
-                t.end_time,
+                p.start_time,
+                p.end_time,
                 c.id AS class_id,
-                c.class_name,
-                s.subject_name
+                c.name AS class_name,
+                s.name AS subject_name
             FROM timetable t
             JOIN classes c ON t.class_id = c.id
             JOIN subjects s ON t.subject_id = s.id
+            JOIN periods p ON t.period_id = p.id
             WHERE t.teacher_id = $1
             ORDER BY 
                 CASE t.day_of_week
@@ -31,12 +32,11 @@ const getMySchedule = async (req, res) => {
                     WHEN 'Saturday' THEN 6
                     ELSE 7
                 END,
-                t.start_time;
+                p.start_time;
         `;
 
         const { rows } = await pool.query(query, [teacherId]);
 
-        // Optional: Group the results by day of the week for easier frontend rendering
         const scheduleByDay = rows.reduce((acc, curr) => {
             if (!acc[curr.day_of_week]) acc[curr.day_of_week] = [];
             acc[curr.day_of_week].push(curr);
@@ -46,7 +46,7 @@ const getMySchedule = async (req, res) => {
         res.status(200).json({ 
             success: true, 
             schedule: scheduleByDay,
-            raw_schedule: rows // Sending raw rows as well just in case you need a flat list
+            raw_schedule: rows 
         });
 
     } catch (error) {
