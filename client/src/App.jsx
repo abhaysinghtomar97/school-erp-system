@@ -3,8 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// --- Import Layouts ---
-import AdminLayout from './layouts/AdminLayout'; // <-- NEW
+// --- Import Layout & Navigation Config ---
+// Updated to use the universal layout we created
+import DashboardLayout from './layouts/DashboardLayout'; 
+// Make sure you have created this file with your link arrays
+import { adminLinks, facultyLinks, studentLinks } from './config/navigation'; 
 
 // --- Import Pages ---
 import Login from './pages/Auth/Login';
@@ -39,36 +42,41 @@ function App() {
           {/* 🔒 NESTED ADMIN ROUTES 🔒 */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
-              <AdminLayout /> {/* Parent Layout contains Sidebar/Header */}
+              <DashboardLayout navLinks={adminLinks} />
             </ProtectedRoute>
           }>
-            {/* These child routes render inside the <Outlet /> of AdminLayout */}
-
             <Route path="" element={<AdminDashboard />} />
             <Route path="create-user" element={<CreateUser />} />
             <Route path="students" element={<ManageStudents />} />
             <Route path="faculty" element={<ManageFaculty />} />
             <Route path="classes" element={<ManageClasses />} />
             <Route path="enrollments" element={<ManageEnrollments />} />
-
             <Route path="timetable" element={<ManageTimetable/>} />
-
           </Route>
 
-          {/* 🔒 FACULTY ROUTES 🔒 */}
+          {/* 🔒 NESTED FACULTY ROUTES 🔒 */}
           <Route path="/faculty" element={
             <ProtectedRoute allowedRoles={['TEACHER']}>
-              <FacultyDashboard />
+              <DashboardLayout navLinks={facultyLinks} />
             </ProtectedRoute>
-          } />
+          }>
+            {/* Renders FacultyDashboard inside the Layout's Outlet */}
+            <Route path="" element={<FacultyDashboard />} />
+          </Route>
 
-          {/* 🔒 STUDENT ROUTES 🔒 */}
+          {/* 🔒 NESTED STUDENT ROUTES 🔒 */}
           <Route path="/student" element={
             <ProtectedRoute allowedRoles={['STUDENT']}>
-              <StudentDashboard />
+              <DashboardLayout navLinks={studentLinks} />
             </ProtectedRoute>
-          } />
-          /* 🔒 NOTICE ROUTES 🔒 */
+          }>
+            {/* Renders StudentDashboard inside the Layout's Outlet */}
+            <Route path="" element={<StudentDashboard />} />
+          </Route>
+
+          {/* 🔒 NOTICE ROUTES 🔒 */}
+          {/* Fixed the comment syntax. Note: You have this pointing to StudentDashboard. 
+              If you want this inside the layout, move it into the nested student block above. */}
           <Route path="/notice" element={
             <ProtectedRoute allowedRoles={['STUDENT']}>
               <StudentDashboard />

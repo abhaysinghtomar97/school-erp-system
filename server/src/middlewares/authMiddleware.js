@@ -20,5 +20,28 @@ const verifyToken = (req, res, next) => {
         res.status(403).json({ message: 'Invalid or Expired Token' });
     }
 };
+// The New Role Checker
+const checkRole = (allowedRoles) => {
+    return (req, res, next) => {
+        // req.user comes from your verifyToken middleware
+        if (!req.user || !req.user.role) {
+            return res.status(401).json({ success: false, message: "Authentication required" });
+        }
 
-module.exports = verifyToken;
+        // Check if the user's role is in the array of allowed roles
+        if (!allowedRoles.includes(req.user.role)) {
+            return res.status(403).json({ 
+                success: false, 
+                message: `Access Denied. Required role: ${allowedRoles.join(' or ')}` 
+            });
+        }
+
+        // If they pass the check, let them proceed to the controller
+        next();
+    };
+};
+
+module.exports = {
+    verifyToken, // your existing token verifier
+    checkRole    // export the new function
+};

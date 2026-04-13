@@ -2,15 +2,15 @@ const bcrypt = require('bcryptjs'); // Using bcryptjs as seen in your screenshot
 const crypto = require('crypto');
 const pool = require('../config/db');
 // Assuming you exported transporter from your new utils folder!
-const transporter = require('../utils/sendEmail');
-
+// const transporter = require('../utils/sendEmail');
+const { Resend } = require('resend');
 
 const getdashboard = async (req, res) => {
     try {
-        
+
         const userId = req.user.id;
-        
-        
+
+
 
         // 1. Stats Query
         const statsQuery = `
@@ -57,21 +57,31 @@ const getdashboard = async (req, res) => {
 };
 const CreateUser = async (req, res) => {
     const { name, email, role } = req.body;
-    
-    // 1. Get a dedicated client from the pool for a Transaction
+
     const client = await pool.connect();
 
     try {
-        // Start Database Transaction
         await client.query('BEGIN');
 
+        // ✅ FIX 1: Basic required check (minimal, not changing your style)
+        if (!name || !email || !role) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
         // Check if user exists
-        const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+        const existingUser = await client.query(
+            'SELECT id FROM users WHERE email = $1',
+            [email]
+        );
+
+        // ✅ FIX 2: Prevent transaction leak
         if (existingUser.rows.length > 0) {
+            await client.query('ROLLBACK');
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
-        // Set prefix based on role
+        // 🔒 KEEPING YOUR ORIGINAL PREFIX LOGIC (Point 6 unchanged)
         let prefix = '';
         if (role === 'TEACHER') prefix = 'fc_';
         else if (role === 'ADMIN') prefix = 'A_';
@@ -79,7 +89,7 @@ const CreateUser = async (req, res) => {
         const currentYear = new Date().getFullYear().toString().slice(-2);
         const searchPattern = `${prefix}${currentYear}%`;
 
-        // Get last ID
+        // 🔒 KEEPING YOUR ORIGINAL ID LOGIC (Point 4 unchanged)
         const lastUserResult = await client.query(
             `SELECT institutional_id FROM users 
              WHERE institutional_id LIKE $1 
@@ -99,67 +109,64 @@ const CreateUser = async (req, res) => {
         const paddedSequence = String(nextSequence).padStart(3, '0');
         const institutionalId = `${prefix}${currentYear}${paddedSequence}`;
 
-        // Generate temporary password
-        const tempPassword = crypto.randomBytes(4).toString('hex');
-        console.log("tempPass generated for:", email);
+        // ✅ FIX 3: Stronger temp password
+        const tempPassword = crypto.randomBytes(8).toString('hex');
 
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(tempPassword, salt);
 
-        // Insert the user
-        const newUser = await client.query(
-            `INSERT INTO users (name, email, password_hash, role, is_first_login, institutional_id) 
-             VALUES ($1, $2, $3, $4, true, $5) RETURNING id, name, email, institutional_id, role`,
-            [name, email, passwordHash, role, institutionalId]
-        );
+        let newUser;
 
-        // COMMIT the transaction (Saves everything permanently)
+        try {
+            newUser = await client.query(
+                `INSERT INTO users 
+                (name, email, password_hash, role, is_first_login, institutional_id) 
+                VALUES ($1, $2, $3, $4, true, $5) 
+                RETURNING id, name, email, institutional_id, role`,
+                [name, email, passwordHash, role, institutionalId]
+            );
+        } catch (err) {
+            // ✅ FIX 4: Handle duplicate institutional_id (race condition)
+            if (err.code === '23505') {
+                await client.query('ROLLBACK');
+                return res.status(409).json({ message: 'ID conflict, please retry' });
+            }
+            throw err;
+        }
+
         await client.query('COMMIT');
 
-        // Send Success Response IMMEDIATELY (Don't wait for the email to send)
         res.status(201).json({
             message: 'User created successfully. Email is being sent.',
             user: newUser.rows[0]
         });
-
-        // ==========================================
-        // FIRE AND FORGET EMAIL LOGIC (VIA RESEND)
-        // ==========================================
         
-        const mailOptions = {
-            from: `"Golden Valley School ERP" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: "Your ERP Account Details",
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333;">
-                    <h2 style="color: #2c3e50;">Welcome to the ERP System</h2>
-                    <p>Dear <strong>${name}</strong>,</p>
-                    <p>Your account has been successfully created.</p>
-                    <div style="background: #f4f6f8; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <p style="margin: 5px 0;"><strong>Institutional ID:</strong> ${institutionalId}</p>
-                        <p style="margin: 5px 0;"><strong>Temporary Password:</strong> ${tempPassword}</p>
-                    </div>
-                    <p style="color: #e74c3c;"><strong>Note:</strong> Please change your password after your first login.</p>
-                </div>
-            `
-        };
 
-        // Notice there is NO 'await' here. We handle errors with .catch() so it doesn't crash the server.
-        transporter.sendMail(mailOptions).catch(emailError => {
-            console.error(`Background Email Failed for ${email}:`, emailError.message);
-        });
+        const resend = new Resend(process.env.RESEND_API_KEY);
+
+        (async function () {
+            const { data, error } = await resend.emails.send({
+                from:'gvs <onboarding@resend.dev>',
+                to: ['abhaysinghtomar97@gmail.com'],
+                subject: 'Hello World',
+                html: '<strong>It works!</strong>',
+            });
+
+            if (error) {
+                return console.error({ error });
+            }
+
+            console.log({ data });
+        })();
 
     } catch (err) {
-        // If anything fails in the try block, undo any database changes
         await client.query('ROLLBACK');
         console.error('Error creating user:', err.message);
 
-        // Ensure we only send a response if one hasn't been sent yet
         if (!res.headersSent) {
             res.status(500).json({ message: 'Server Error during user creation' });
         }
     } finally {
-        // ALWAYS release the client back to the pool, whether it succeeded or failed
         client.release();
     }
 };
