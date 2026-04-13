@@ -4,7 +4,7 @@ const router = express.Router();
 const facultyController = require('../controllers/facultyController');
 
 // Import both middleware functions
-const { verifyToken, checkRole } = require('../middleware/authMiddleware'); 
+const { verifyToken, checkRole } = require('../middlewares/authMiddleware'); 
 
 // 1. First, verify they are logged in (this sets req.user)
 router.use(verifyToken);
