@@ -1,10 +1,19 @@
+// src/routes/facultyRoutes.js
 const express = require('express');
 const router = express.Router();
 const facultyController = require('../controllers/facultyController');
-const verifyToken = require('../middlewares/authMiddleware');
 
-// Notice we put verifyToken in the middle! It acts as a shield.
-router.get('/my-classes', verifyToken, facultyController.getMyClasses);
+// Import both middleware functions
+const { verifyToken, checkRole } = require('../middleware/authMiddleware'); 
 
+// 1. First, verify they are logged in (this sets req.user)
+router.use(verifyToken);
 
-module.exports = router; 
+// 2. Second, verify they are actually a TEACHER
+router.use(checkRole(['TEACHER'])); 
+
+// --- Protected Endpoints ---
+router.get('/schedule', facultyController.getMySchedule);
+router.get('/class/:classId/roster', facultyController.getClassRoster);
+
+module.exports = router;
