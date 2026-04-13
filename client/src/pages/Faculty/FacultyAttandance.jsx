@@ -142,7 +142,7 @@ const FacultyAttendance = () => {
                     </span>
                 </div>
 
-                <div className="overflow-x-auto min-h-[400px]">
+                <div className="overflow-x-auto min-h-100">
                     {isLoading ? (
                         <div className="flex justify-center items-center h-64 text-gray-400">Loading roster...</div>
                     ) : attendanceData.length === 0 ? (
