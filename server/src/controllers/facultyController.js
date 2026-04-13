@@ -2,7 +2,6 @@ const pool = require('../config/db'); // Adjust this to match your DB connection
 
 // --- 1. Get Teacher's Schedule ---
 // Fetches the timetable specifically for the logged-in teacher
-// --- 1. Get Teacher's Schedule ---
 const getMySchedule = async (req, res) => {
     try {
         const teacherId = req.user.id; 
@@ -102,7 +101,87 @@ const getClassRoster = async (req, res) => {
     }
 };
 
+// --- 3. Get Attendance for a Specific Date ---
+const getAttendance = async (req, res) => {
+    const { classId, date } = req.params;
+    
+    try {
+        const query = `
+            SELECT 
+                u.id AS student_id, 
+                u.name, 
+                u.institutional_id,
+                COALESCE(a.status, 'Not Marked') as status
+            FROM users u
+            JOIN enrollments e ON u.id = e.student_id
+            LEFT JOIN attendance a ON u.id = a.student_id AND a.class_id = $1 AND a.date = $2
+            WHERE e.class_id = $1 AND u.role = 'STUDENT'
+            ORDER BY u.name ASC;
+        `;
+        const { rows } = await pool.query(query, [classId, date]);
+        
+        res.status(200).json({ success: true, attendance: rows });
+    } catch (error) {
+        console.error("Error fetching attendance:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// --- 4. Submit/Update Attendance ---
+const markAttendance = async (req, res) => {
+    const { classId, date, attendanceData } = req.body; 
+    const teacherId = req.user.id;
+
+    // Use a transaction to prevent partial attendance saves
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        for (let record of attendanceData) {
+            const query = `
+                INSERT INTO attendance (class_id, student_id, date, status, marked_by)
+                VALUES ($1, $2, $3, $4, $5)
+                ON CONFLICT (class_id, student_id, date)
+                DO UPDATE SET status = EXCLUDED.status, marked_by = EXCLUDED.marked_by;
+            `;
+            await client.query(query, [classId, record.student_id, date, record.status, teacherId]);
+        }
+
+        await client.query('COMMIT');
+        res.status(200).json({ success: true, message: 'Attendance saved successfully' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Error saving attendance:", error);
+        res.status(500).json({ success: false, message: "Server error saving attendance" });
+    } finally {
+        client.release();
+    }
+};
+
+// --- 5. Get Unique Classes for this Teacher ---
+const getMyClasses = async (req, res) => {
+    try {
+        const teacherId = req.user.id;
+        const query = `
+            SELECT DISTINCT c.id, c.name 
+            FROM timetable t
+            JOIN classes c ON t.class_id = c.id
+            WHERE t.teacher_id = $1
+            ORDER BY c.name ASC;
+        `;
+        const { rows } = await pool.query(query, [teacherId]);
+        res.status(200).json({ success: true, classes: rows });
+    } catch (error) {
+        console.error("Error fetching teacher classes:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// Export ALL functions to prevent 'argument handler must be a function' errors
 module.exports = {
     getMySchedule,
-    getClassRoster
+    getClassRoster,
+    getAttendance,
+    markAttendance,
+    getMyClasses
 };

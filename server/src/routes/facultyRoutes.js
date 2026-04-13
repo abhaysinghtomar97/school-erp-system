@@ -13,7 +13,14 @@ router.use(verifyToken);
 router.use(checkRole(['TEACHER'])); 
 
 // --- Protected Endpoints ---
+
+// Timetable & Rosters
 router.get('/schedule', facultyController.getMySchedule);
 router.get('/class/:classId/roster', facultyController.getClassRoster);
+router.get('/my-classes', facultyController.getMyClasses);
+
+// Attendance Management
+router.get('/class/:classId/attendance/:date', facultyController.getAttendance);
+router.post('/attendance', facultyController.markAttendance);
 
 module.exports = router;
