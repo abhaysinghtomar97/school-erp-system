@@ -7,49 +7,48 @@ const ManageTimetable = () => {
     const [selectedClass, setSelectedClass] = useState('');
     const [timetable, setTimetable] = useState({});
 
-    // NEW: Add a loading state variable
-    const [isLoading, setIsLoading] = useState(true);
-
+    
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({ day: '', periodId: '', subjectId: '', teacherId: '' });
     const [subjects, setSubjects] = useState([]);
     const [teachers, setTeachers] = useState([]);
-
+    
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    // NEW: Add a loading state variable
+   // 1. Split into two distinct states
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isTableLoading, setIsTableLoading] = useState(false);
 
-    // Load initial setup data concurrently
+    // ...
+
+    // 2. Update the initial setup fetch
     useEffect(() => {
         const fetchSetupData = async () => {
             try {
-                // Fire all three requests at the exact same time
-                // 1. JavaScript asks for classes, and WAITS until it finishes...
-                const classRes = await axios.get('/api/admin/classes');
-
-                // 2. THEN it asks for periods, and WAITS until it finishes...
-                const periodRes = await axios.get('/api/admin/periods');
-
-                // 3. THEN it asks for faculty, and WAITS until it finishes.
-                const teacherRes = await axios.get('/api/admin/faculty');
-                // Extract the arrays safely
-                console.log("clas: ",classRes)
-                console.log("pero: ",periodRes)
-                console.log("teac: ",teacherRes)
+                const [classRes, periodRes, teacherRes] = await Promise.all([
+                    axios.get('/api/admin/classes'),
+                    axios.get('/api/admin/periods'),
+                    axios.get('/api/admin/faculty')
+                ]);
+                
                 setClasses(classRes.data.classes || classRes.data || []);
                 setPeriods(periodRes.data.data || periodRes.data || []);
                 setTeachers(teacherRes.data.faculty || teacherRes.data || []);
-
             } catch (error) {
                 console.error("Error fetching setup data:", error);
             } finally {
-                setIsLoading(false)
+                // Use the Initial Loading state here
+                setIsInitialLoading(false);
             }
         };
         fetchSetupData();
     }, []);
 
+    // 3. Update the timetable fetch
     const fetchTimetable = async (classId) => {
-        // NEW: Start loading before the network request
-        setIsLoading(true);
+        // Use the Table Loading state here
+        setIsTableLoading(true);
 
         try {
             const res = await axios.get(`/api/admin/timetable/class/${classId}`);
@@ -60,8 +59,8 @@ const ManageTimetable = () => {
         } catch (error) {
             console.error("Failed to fetch timetable or subjects:", error);
         } finally {
-            // NEW: Stop loading when the request finishes (whether it succeeded or failed)
-            setIsLoading(false);
+            // Stop the Table Loading state here
+            setIsTableLoading(false);
         }
     };
 
@@ -104,14 +103,14 @@ const ManageTimetable = () => {
                 className="border p-2 mb-6 w-full max-w-xs rounded"
                 value={selectedClass}
                 onChange={handleClassChange}
-            // disabled={isLoading} 
+            disabled={isInitialLoading} 
             >
                 <option value="">
-                    {isLoading ? 'Loading classes...' : 'Select a Class'}
+                    {isInitialLoading ? 'Loading classes...' : 'Select a Class'}
                 </option>
 
                 {/* Conditionally render content */}
-                {isLoading ? (
+                {isInitialLoading ? (
                     Array(6).fill(null).map((_, index) => (
                         <option key={`skeleton-${index}`} className="skeleton-option"></option>
                     ))
@@ -124,7 +123,7 @@ const ManageTimetable = () => {
             </select>
 
             {/* NEW: Display a loading spinner if data is being fetched */}
-            {selectedClass && isLoading && (
+            {selectedClass && isTableLoading && (
                 <div className="flex flex-col items-center justify-center p-12 border border-gray-200 rounded-lg bg-white">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-orange-500 mb-4"></div>
                     <p className="text-gray-500 font-medium">Loading timetable...</p>
@@ -132,7 +131,7 @@ const ManageTimetable = () => {
             )}
 
             {/* Render the table only if a class is selected AND we are not loading */}
-            {selectedClass && !isLoading && (
+            {selectedClass && !isTableLoading && (
                 <div className="overflow-x-auto border border-gray-200 rounded-lg shadow">
                     <div className="bg-orange-500 text-white p-3 font-bold text-lg rounded-t-lg flex justify-between items-center">
                         <span>Time Table</span>
