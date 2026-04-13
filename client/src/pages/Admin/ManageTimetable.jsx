@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
+import api from '../../services/api';
 const ManageTimetable = () => {
     const [classes, setClasses] = useState([]);
     const [periods, setPeriods] = useState([]);
@@ -27,9 +26,9 @@ const ManageTimetable = () => {
         const fetchSetupData = async () => {
             try {
                 const [classRes, periodRes, teacherRes] = await Promise.all([
-                    axios.get('/api/admin/classes'),
-                    axios.get('/api/admin/periods'),
-                    axios.get('/api/admin/faculty')
+                    api.get('/admin/classes'),
+                    api.get('/admin/periods'),
+                    api.get('/admin/faculty')
                 ]);
                 
                 setClasses(classRes.data.classes || classRes.data || []);
@@ -51,10 +50,10 @@ const ManageTimetable = () => {
         setIsTableLoading(true);
 
         try {
-            const res = await axios.get(`/api/admin/timetable/class/${classId}`);
+            const res = await api.get(`/admin/timetable/class/${classId}`);
             setTimetable(res.data.data || {});
 
-            const subRes = await axios.get(`/api/admin/subjects/class/${classId}`);
+            const subRes = await api.get(`/admin/subjects/class/${classId}`);
             setSubjects(subRes.data.data || []);
         } catch (error) {
             console.error("Failed to fetch timetable or subjects:", error);
@@ -78,7 +77,7 @@ const ManageTimetable = () => {
     const handleSave = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/admin/timetable/assign', {
+            await api.post('/admin/timetable/assign', {
                 ...formData,
                 classId: selectedClass
             });
