@@ -21,7 +21,8 @@ import ManageClasses from './pages/Admin/ManageClasses';
 import ManageEnrollments from './pages/Admin/ManageEnrollments';
 import CreateUser from './pages/Admin/CreateUser';
 import ManageTimetable from './pages/Admin/ManageTimetable';
-
+import FacultyAttendance from './pages/Faculty/FacultyAttandance';
+import ManageAttendance from './pages/Admin/ManageAttandance';
 function App() {
   return (
     <AuthProvider>
@@ -52,6 +53,8 @@ function App() {
             <Route path="classes" element={<ManageClasses />} />
             <Route path="enrollments" element={<ManageEnrollments />} />
             <Route path="timetable" element={<ManageTimetable/>} />
+            <Route path="attendance" element={<ManageAttendance/>} />
+
           </Route>
 
           {/* 🔒 NESTED FACULTY ROUTES 🔒 */}
@@ -62,6 +65,7 @@ function App() {
           }>
             {/* Renders FacultyDashboard inside the Layout's Outlet */}
             <Route path="" element={<FacultyDashboard />} />
+            <Route path="attendance" element={<FacultyAttendance />} />
           </Route>
 
           {/* 🔒 NESTED STUDENT ROUTES 🔒 */}

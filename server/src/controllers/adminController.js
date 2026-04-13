@@ -47,7 +47,7 @@ const getdashboard = async (req, res) => {
         res.status(200).json({
             stats: statsResult.rows[0],
             notices: noticesResult.rows,
-            user: userResult.rows[0] // Here is your biodata!
+            user: userResult.rows[0]
         });
 
     } catch (error) {

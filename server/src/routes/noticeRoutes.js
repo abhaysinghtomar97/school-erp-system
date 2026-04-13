@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const noticeController = require('../controllers/noticeController');
-const verifyToken = require('../middlewares/authMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
 
 // api/notice
 
