@@ -43,7 +43,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/faculty', facultyRoutes);
-app.use('/api/notice', noticeRoutes);
+app.use('/api', noticeRoutes);
 app.use('/api/student', studentRoutes);
 
 

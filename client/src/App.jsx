@@ -27,6 +27,7 @@ import FacultyGrades from './pages/Faculty/FacultyGrades';
 import StudentTimetable from './pages/Student/StudentTimeTable';
 import StudentAttendance from './pages/Student/StudentAttendance';
 import StudentAssignments from './pages/Student/StudentAssignment';
+import RecentAnnouncements from './components/wedget/RecentAnnouncements';
 
 
 
@@ -76,6 +77,7 @@ function App() {
             <Route path="" element={<FacultyDashboard />} />
             <Route path="attendance" element={<FacultyAttendance />} />
             <Route path="grades" element={<FacultyGrades />} />
+            <Route path="notices" element={<RecentAnnouncements/>}/>
           </Route>
 
         
@@ -87,13 +89,10 @@ function App() {
           }>
             {/* The default dashboard page */}
             <Route index element={<StudentDashboard />} />
-            
-            {/* The full timetable page we just built */}
             <Route path="timetable" element={<StudentTimetable />} />
-            
-            {/* Placeholders for tomorrow */}
             <Route path="attendance" element={<StudentAttendance />} />
             <Route path="assignments" element={<StudentAssignments />} />
+            <Route path="notices" element={<RecentAnnouncements/>}/>
           </Route>
 
           {/* 🔒 NOTICE ROUTES 🔒 */}

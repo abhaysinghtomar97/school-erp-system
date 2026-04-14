@@ -9,4 +9,6 @@ router.get('/', verifyToken, noticeController.getNotices);
 
 router.post('/', verifyToken, noticeController.createNotice);
 
+router.get('/my-notices',verifyToken, noticeController.getMyNotices);
+
 module.exports = router;

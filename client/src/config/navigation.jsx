@@ -70,6 +70,7 @@ export const facultyLinks = [
     {
         name: 'Assignments', path: '/faculty/grades', icon: assignment
     },
+    { name: 'Notice', path: '/faculty/notices', icon: assignment }
 ];
 
 // src/config/navigation.js (or similar)
@@ -78,5 +79,6 @@ export const studentLinks = [
     { name: 'Dashboard', path: '/student', icon: dashboard }, // Adjust icons to whatever library you use
     { name: 'My TimeTable', path: '/student/timetable', icon: TimeTable },
     { name: 'My Attendance', path: '/student/attendance', icon: attendance },
-    { name: 'Assignments & Grades', path: '/student/assignments', icon: assignment }
+    { name: 'Assignments & Grades', path: '/student/assignments', icon: assignment },
+    { name: 'notices', path: '/student/notices', icon: assignment }
 ];

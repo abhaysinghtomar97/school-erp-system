@@ -43,7 +43,36 @@ const createNotice = async (req, res) => {
     }
 };
 
+
+// --- 1. Get Notices for the Logged-in User ---
+const getMyNotices = async (req, res) => {
+    try {
+        const userRole = req.user.role; // e.g., 'STUDENT', 'TEACHER', 'ADMIN'
+
+        // Fetch notices that are either targeted at 'ALL' or specifically at this user's role
+        const query = `
+            SELECT 
+                n.id, n.title, n.content, n.target_audience, n.created_at, 
+                u.name AS posted_by_name
+            FROM notices n
+            LEFT JOIN users u ON n.posted_by = u.id
+            WHERE n.target_audience = 'ALL' OR n.target_audience = $1
+            ORDER BY n.created_at DESC
+            LIMIT 10; -- Just get the recent 10 announcements
+        `;
+        const { rows } = await pool.query(query, [userRole]);
+
+        res.status(200).json({ success: true, notices: rows });
+    } catch (error) {
+        console.error("Error fetching notices:", error);
+        res.status(500).json({ success: false, message: "Server error fetching notices" });
+    }
+};
+
+
+
 module.exports = {
     getNotices,
-    createNotice
+    createNotice,
+    getMyNotices
 };
