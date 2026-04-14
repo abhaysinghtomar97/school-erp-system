@@ -28,7 +28,7 @@ import StudentTimetable from './pages/Student/StudentTimeTable';
 import StudentAttendance from './pages/Student/StudentAttendance';
 import StudentAssignments from './pages/Student/StudentAssignment';
 import RecentAnnouncements from './components/wedget/RecentAnnouncements';
-import AttendanceSummaryWidget from './pages/Student/AttendanceSummaryWidget';
+import AutoTitle from './components/AutoTitle';
 
 
 
@@ -36,8 +36,10 @@ import AttendanceSummaryWidget from './pages/Student/AttendanceSummaryWidget';
 
 function App() {
   return (
+   
     <AuthProvider>
       <Router>
+    <AutoTitle/>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -110,6 +112,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+    
   );
 }
 

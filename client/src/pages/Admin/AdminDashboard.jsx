@@ -61,7 +61,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="max-w-5xl mx-auto font-sans text-gray-800 space-y-6">
-
+            
             {/* 1. WELCOME & BIODATA CARD */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-10"></div>
