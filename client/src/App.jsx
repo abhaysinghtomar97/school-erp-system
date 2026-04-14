@@ -28,6 +28,7 @@ import StudentTimetable from './pages/Student/StudentTimeTable';
 import StudentAttendance from './pages/Student/StudentAttendance';
 import StudentAssignments from './pages/Student/StudentAssignment';
 import RecentAnnouncements from './components/wedget/RecentAnnouncements';
+import AttendanceSummaryWidget from './pages/Student/AttendanceSummaryWidget';
 
 
 
@@ -93,6 +94,7 @@ function App() {
             <Route path="attendance" element={<StudentAttendance />} />
             <Route path="assignments" element={<StudentAssignments />} />
             <Route path="notices" element={<RecentAnnouncements/>}/>
+            
           </Route>
 
           {/* 🔒 NOTICE ROUTES 🔒 */}

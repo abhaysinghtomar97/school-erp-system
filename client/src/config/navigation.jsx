@@ -80,5 +80,5 @@ export const studentLinks = [
     { name: 'My TimeTable', path: '/student/timetable', icon: TimeTable },
     { name: 'My Attendance', path: '/student/attendance', icon: attendance },
     { name: 'Assignments & Grades', path: '/student/assignments', icon: assignment },
-    { name: 'notices', path: '/student/notices', icon: assignment }
+    { name: 'Notices', path: '/student/notices', icon: assignment }
 ];

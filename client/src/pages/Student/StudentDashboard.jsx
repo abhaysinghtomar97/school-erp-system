@@ -1,5 +1,6 @@
 import React from 'react';
 import TodayClassesWidget from './TodaysClassesWidget'; // The widget we built!
+import AttendanceSummaryWidget from './AttendanceSummaryWidget';
 
 const StudentDashboard = () => {
     // We can pull the student's name from context or local storage if you have it!
@@ -30,8 +31,8 @@ const StudentDashboard = () => {
                 {/* Right Column (For future smaller widgets) */}
                 <div className="space-y-6">
                     {/* Placeholder for an upcoming Attendance Summary Widget */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-48 flex items-center justify-center text-gray-400">
-                        Attendance Summary Widget (Coming Soon)
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100  flex items-center justify-center text-gray-400">
+                        <AttendanceSummaryWidget />
                     </div>
 
                     {/* Placeholder for Upcoming Deadlines */}
