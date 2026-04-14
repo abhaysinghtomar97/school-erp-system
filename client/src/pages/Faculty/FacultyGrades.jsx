@@ -191,7 +191,7 @@ const FacultyGrades = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 {/* LEFT COLUMN: Assignments List */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[600px]">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-150">
                     <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                         <h3 className="font-bold text-gray-700">Assignments</h3>
                         <button 
@@ -232,7 +232,7 @@ const FacultyGrades = () => {
                 </div>
 
                 {/* RIGHT COLUMN: Gradebook */}
-                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[600px]">
+                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-150">
                     {selectedAssignment ? (
                         <>
                             <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">

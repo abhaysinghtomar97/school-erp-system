@@ -20,7 +20,7 @@ async function login(req, res){
         const user = userResult.rows[0];
         
         
-
+console.log(password,user.password_hash)
         // 2. Validate password
         const validPassword = await bcrypt.compare(password, user.password_hash);
     

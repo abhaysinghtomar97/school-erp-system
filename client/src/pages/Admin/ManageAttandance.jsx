@@ -145,7 +145,7 @@ const ManageAttendance = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-125 flex flex-col">
                 
                 {/* Filters Toolbar */}
                 <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-wrap gap-4 items-end">

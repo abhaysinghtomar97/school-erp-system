@@ -24,6 +24,14 @@ import ManageTimetable from './pages/Admin/ManageTimetable';
 import FacultyAttendance from './pages/Faculty/FacultyAttandance';
 import ManageAttendance from './pages/Admin/ManageAttandance';
 import FacultyGrades from './pages/Faculty/FacultyGrades';
+import StudentTimetable from './pages/Student/StudentTimeTable';
+import StudentAttendance from './pages/Student/StudentAttendance';
+import StudentAssignments from './pages/Student/StudentAssignment';
+
+
+
+
+
 function App() {
   return (
     <AuthProvider>
@@ -70,14 +78,22 @@ function App() {
             <Route path="grades" element={<FacultyGrades />} />
           </Route>
 
-          {/* 🔒 NESTED STUDENT ROUTES 🔒 */}
+        
+          {/* 🎓 NESTED STUDENT ROUTES 🎓 */}
           <Route path="/student" element={
             <ProtectedRoute allowedRoles={['STUDENT']}>
               <DashboardLayout navLinks={studentLinks} />
             </ProtectedRoute>
           }>
-            {/* Renders StudentDashboard inside the Layout's Outlet */}
-            <Route path="" element={<StudentDashboard />} />
+            {/* The default dashboard page */}
+            <Route index element={<StudentDashboard />} />
+            
+            {/* The full timetable page we just built */}
+            <Route path="timetable" element={<StudentTimetable />} />
+            
+            {/* Placeholders for tomorrow */}
+            <Route path="attendance" element={<StudentAttendance />} />
+            <Route path="assignments" element={<StudentAssignments />} />
           </Route>
 
           {/* 🔒 NOTICE ROUTES 🔒 */}
@@ -87,7 +103,7 @@ function App() {
             <ProtectedRoute allowedRoles={['STUDENT']}>
               <StudentDashboard />
             </ProtectedRoute>
-          } />
+          } /> 
 
           <Route path="*" element={<h2 style={{ textAlign: 'center', marginTop: '50px' }}>404 - Page Not Found</h2>} />
         </Routes>
