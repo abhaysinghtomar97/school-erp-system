@@ -8,7 +8,7 @@ const Login = () => {
     const {login} = useContext(AuthContext);
     const [loading, setloading] = useState(false);
     const [formData, setFormData] = useState({ identifier: '', password: '' });
-    console.log("form data: ", formData)
+
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -25,8 +25,7 @@ const Login = () => {
             // Hit your Node.js backend
             const response = await API.post('/auth/login', formData);
             const { token, user } = response.data;
-            // console.log(token,user)
-
+           
             // Save the token to local storage
             login(token)
 

@@ -23,6 +23,7 @@ import CreateUser from './pages/Admin/CreateUser';
 import ManageTimetable from './pages/Admin/ManageTimetable';
 import FacultyAttendance from './pages/Faculty/FacultyAttandance';
 import ManageAttendance from './pages/Admin/ManageAttandance';
+import FacultyGrades from './pages/Faculty/FacultyGrades';
 function App() {
   return (
     <AuthProvider>
@@ -66,6 +67,7 @@ function App() {
             {/* Renders FacultyDashboard inside the Layout's Outlet */}
             <Route path="" element={<FacultyDashboard />} />
             <Route path="attendance" element={<FacultyAttendance />} />
+            <Route path="grades" element={<FacultyGrades />} />
           </Route>
 
           {/* 🔒 NESTED STUDENT ROUTES 🔒 */}

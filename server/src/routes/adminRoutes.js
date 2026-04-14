@@ -24,4 +24,10 @@ router.post('/timetable/assign', adminController.assignTimetableSlot);
 router.get('/periods',  adminController.getAllPeriods); 
 router.get('/subjects/class/:classId', adminController.getSubjectsByClass);
 
+// --- ATTENDANCE MANAGEMENT ROUTES ---
+router.get('/attendance/students', verifyToken, adminController.getStudentAttendanceLogs);
+router.get('/attendance/faculty', verifyToken, adminController.getFacultyAttendance);
+router.post('/attendance/faculty', verifyToken, adminController.markFacultyAttendance);
+
+
 module.exports = router;

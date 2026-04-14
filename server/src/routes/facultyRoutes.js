@@ -23,4 +23,12 @@ router.get('/my-classes', facultyController.getMyClasses);
 router.get('/class/:classId/attendance/:date', facultyController.getAttendance);
 router.post('/attendance', facultyController.markAttendance);
 
+// Assignment and submitGrades
+// Assignment & Grade Management
+router.post('/assignments', facultyController.createAssignment);
+router.get('/class/:classId/assignments', facultyController.getAssignments);
+router.post('/grades', facultyController.submitGrades);
+router.get('/class/:classId/subjects', facultyController.getClassSubjects);
+
+
 module.exports = router;

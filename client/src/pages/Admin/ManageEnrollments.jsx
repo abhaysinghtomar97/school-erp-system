@@ -5,10 +5,10 @@ const ManageEnrollments = () => {
     const [classes, setClasses] = useState([]);
     const [allStudents, setAllStudents] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
-    
+
     const [roster, setRoster] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState('');
-    
+
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -22,10 +22,10 @@ const ManageEnrollments = () => {
                     API.get('/admin/students')
                 ]);
                 setClasses(Array.isArray(classesRes.data.classes) ? classesRes.data.classes : []);
-                
+
                 // Assuming your student route returns an array directly or inside a property
-// GOOD: Looking for capital 'Students' (I also left the lowercase one in there just as a safety net!)
-const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studentsRes.data.Students || studentsRes.data.students || [];                console.log("WHAT IS NODE SENDING?", studentsRes.data);
+                // GOOD: Looking for capital 'Students' (I also left the lowercase one in there just as a safety net!)
+                const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studentsRes.data.Students || studentsRes.data.students || [];
                 setAllStudents(studentArray);
 
                 setLoading(false);
@@ -59,7 +59,7 @@ const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studen
     const handleEnroll = async (e) => {
         e.preventDefault();
         if (!selectedClass || !selectedStudent) return;
-        
+
         setEnrolling(true);
         setMessage({ type: '', text: '' });
 
@@ -93,16 +93,16 @@ const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studen
                 <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
             ) : (
                 <div className="flex flex-col lg:flex-row gap-8">
-                    
+
                     {/* LEFT SIDE: Selection & Enrollment Form */}
                     <div className="lg:w-1/3 flex flex-col gap-6">
-                        
+
                         {/* Step 1: Pick a Class */}
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                             <label className="block text-sm font-semibold text-gray-700 mb-2">1. Select a Class</label>
-                            <select 
-                                value={selectedClass} 
-                                onChange={(e) => { setSelectedClass(e.target.value); setMessage({type:'', text:''}); }}
+                            <select
+                                value={selectedClass}
+                                onChange={(e) => { setSelectedClass(e.target.value); setMessage({ type: '', text: '' }); }}
                                 className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-gray-50"
                             >
                                 <option value="">-- Choose Class --</option>
@@ -116,7 +116,7 @@ const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studen
                         {selectedClass && (
                             <div className="bg-indigo-50 p-6 rounded-xl shadow-sm border border-indigo-100">
                                 <h3 className="text-lg font-semibold text-indigo-900 mb-4">2. Add Student to Class</h3>
-                                
+
                                 {message.text && (
                                     <div className={`p-3 mb-4 rounded text-sm ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                                         {message.text}
@@ -124,8 +124,8 @@ const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studen
                                 )}
 
                                 <form onSubmit={handleEnroll} className="flex flex-col gap-4">
-                                    <select 
-                                        value={selectedStudent} 
+                                    <select
+                                        value={selectedStudent}
                                         onChange={(e) => setSelectedStudent(e.target.value)}
                                         required
                                         className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
@@ -137,9 +137,9 @@ const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studen
                                             </option>
                                         ))}
                                     </select>
-                                    
-                                    <button 
-                                        type="submit" 
+
+                                    <button
+                                        type="submit"
                                         disabled={enrolling || !selectedStudent}
                                         className="w-full p-3 text-white font-semibold rounded transition bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300"
                                     >
@@ -193,7 +193,7 @@ const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studen
                             </div>
                         )}
                     </div>
-                    
+
                 </div>
             )}
         </div>

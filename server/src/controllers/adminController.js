@@ -401,6 +401,102 @@ const getSubjectsByClass = async (req, res) => {
     }
 };
 
+// --- ATTENDANCE MANAGEMENT ---
+// 1. Fetch Student Logs (School-wide)
+const getStudentAttendanceLogs = async (req, res) => {
+    const { date, classId } = req.query; // Using query params for filters
+
+    try {
+        let query = `
+            SELECT 
+                a.id, 
+                u.name AS student_name, 
+                u.institutional_id, 
+                c.name AS class_name, 
+                a.status, 
+                m.name AS marked_by_name
+            FROM attendance a
+            JOIN users u ON a.student_id = u.id
+            JOIN classes c ON a.class_id = c.id
+            LEFT JOIN users m ON a.marked_by = m.id
+            WHERE a.date = $1
+        `;
+        
+        let params = [date];
+
+        // If admin selected a specific class, add it to the filter
+        if (classId) {
+            query += ` AND a.class_id = $2`;
+            params.push(classId);
+        }
+
+        query += ` ORDER BY c.name ASC, u.name ASC`;
+
+        const { rows } = await pool.query(query, params);
+        res.status(200).json({ success: true, logs: rows });
+    } catch (error) {
+        console.error("Error fetching student logs:", error);
+        res.status(500).json({ success: false, message: "Server error fetching logs" });
+    }
+};
+
+// 2. Fetch Faculty Attendance
+const getFacultyAttendance = async (req, res) => {
+    const { date } = req.query;
+
+    try {
+        const query = `
+            SELECT 
+                u.id AS teacher_id, 
+                u.name, 
+                u.institutional_id,
+                COALESCE(fa.status, 'Not Marked') as status
+            FROM users u
+            LEFT JOIN faculty_attendance fa ON u.id = fa.teacher_id AND fa.date = $1
+            WHERE u.role = 'TEACHER'
+            ORDER BY u.name ASC;
+        `;
+        const { rows } = await pool.query(query, [date]);
+        res.status(200).json({ success: true, attendance: rows });
+    } catch (error) {
+        console.error("Error fetching faculty attendance:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// 3. Mark Faculty Attendance
+const markFacultyAttendance = async (req, res) => {
+    const { date, attendanceData } = req.body;
+    const adminId = req.user.id; // The logged-in admin
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        for (let record of attendanceData) {
+            const query = `
+                INSERT INTO faculty_attendance (teacher_id, date, status, marked_by)
+                VALUES ($1, $2, $3, $4)
+                ON CONFLICT (teacher_id, date) 
+                DO UPDATE SET status = EXCLUDED.status, marked_by = EXCLUDED.marked_by;
+            `;
+            await client.query(query, [record.teacher_id, date, record.status, adminId]);
+        }
+
+        await client.query('COMMIT');
+        res.status(200).json({ success: true, message: 'Faculty attendance saved successfully' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Error saving faculty attendance:", error);
+        res.status(500).json({ success: false, message: "Server error saving faculty attendance" });
+    } finally {
+        client.release();
+    }
+};
+
+
+
+
 module.exports = {
     CreateUser,
     getStudents,
@@ -414,5 +510,8 @@ module.exports = {
     getdashboard,
     getClassTimetable,
     assignTimetableSlot,
-    getSubjectsByClass
+    getSubjectsByClass,
+    getStudentAttendanceLogs,
+    getFacultyAttendance,
+    markFacultyAttendance
 };

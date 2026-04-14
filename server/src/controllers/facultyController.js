@@ -177,11 +177,115 @@ const getMyClasses = async (req, res) => {
     }
 };
 
-// Export ALL functions to prevent 'argument handler must be a function' errors
+// --- 6. Create a New Assignment ---
+const createAssignment = async (req, res) => {
+    const { classId, subjectId, title, description, dueDate, maxScore } = req.body;
+    const teacherId = req.user.id;
+
+    try {
+        const query = `
+            INSERT INTO assignments (class_id, subject_id, teacher_id, title, description, due_date, max_score)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *;
+        `;
+        const values = [classId, subjectId, teacherId, title, description, dueDate, maxScore];
+        
+        const { rows } = await pool.query(query, values);
+        res.status(201).json({ success: true, message: 'Assignment created successfully', assignment: rows[0] });
+    } catch (error) {
+        console.error("Error creating assignment:", error);
+        res.status(500).json({ success: false, message: "Server error creating assignment" });
+    }
+};
+
+// --- 7. Get Assignments for a Class ---
+const getAssignments = async (req, res) => {
+    const { classId } = req.params;
+    const teacherId = req.user.id;
+
+    try {
+        const query = `
+            SELECT a.*, s.name as subject_name
+            FROM assignments a
+            JOIN subjects s ON a.subject_id = s.id
+            WHERE a.class_id = $1 AND a.teacher_id = $2
+            ORDER BY a.due_date DESC, a.created_at DESC;
+        `;
+        const { rows } = await pool.query(query, [classId, teacherId]);
+        res.status(200).json({ success: true, assignments: rows });
+    } catch (error) {
+        console.error("Error fetching assignments:", error);
+        res.status(500).json({ success: false, message: "Server error fetching assignments" });
+    }
+};
+
+// --- 8. Submit or Update Grades ---
+const submitGrades = async (req, res) => {
+    const { assignmentId, gradesData } = req.body; 
+    // gradesData expects: [{ student_id: 'uuid', score: 95, feedback: 'Great job!' }]
+    const teacherId = req.user.id;
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+
+        for (let record of gradesData) {
+            // Only insert/update if a score was actually provided
+            if (record.score !== null && record.score !== '') {
+                const query = `
+                    INSERT INTO grades (assignment_id, student_id, score, feedback, graded_by)
+                    VALUES ($1, $2, $3, $4, $5)
+                    ON CONFLICT (assignment_id, student_id)
+                    DO UPDATE SET 
+                        score = EXCLUDED.score, 
+                        feedback = EXCLUDED.feedback, 
+                        graded_by = EXCLUDED.graded_by,
+                        graded_at = CURRENT_TIMESTAMP;
+                `;
+                await client.query(query, [assignmentId, record.student_id, record.score, record.feedback, teacherId]);
+            }
+        }
+
+        await client.query('COMMIT');
+        res.status(200).json({ success: true, message: 'Grades saved successfully' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error("Error saving grades:", error);
+        res.status(500).json({ success: false, message: "Server error saving grades" });
+    } finally {
+        client.release();
+    }
+};
+
+// --- 9. Get Teacher's Subjects for a Class ---
+const getClassSubjects = async (req, res) => {
+    const { classId } = req.params;
+    const teacherId = req.user.id;
+
+    try {
+        const query = `
+            SELECT id, name, code 
+            FROM subjects 
+            WHERE class_id = $1 AND teacher_id = $2
+            ORDER BY name ASC;
+        `;
+        const { rows } = await pool.query(query, [classId, teacherId]);
+        res.status(200).json({ success: true, subjects: rows });
+    } catch (error) {
+        console.error("Error fetching subjects:", error);
+        res.status(500).json({ success: false, message: "Server error fetching subjects" });
+    }
+};
+
+// Don't forget to add getClassSubjects to your module.exports at the bottom!
 module.exports = {
     getMySchedule,
     getClassRoster,
     getAttendance,
     markAttendance,
-    getMyClasses
+    getMyClasses,
+    createAssignment,
+    getAssignments,
+    submitGrades,
+    getClassSubjects
 };
