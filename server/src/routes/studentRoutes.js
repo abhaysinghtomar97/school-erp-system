@@ -7,7 +7,7 @@ const { verifyToken, checkRole } = require('../middlewares/authMiddleware');
 const studentAuth = [verifyToken, checkRole(['STUDENT'])];
 
 // Apply the combined middleware to each route individually
-router.get('/data', studentAuth, studentController.getMyData);
+
 router.get('/timetable', studentAuth, studentController.getMyTimetable);
 router.get('/attendance', studentAuth, studentController.getMyAttendance);
 router.get('/assignments', studentAuth, studentController.getMyAssignmentsAndGrades);
