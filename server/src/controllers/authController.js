@@ -20,7 +20,7 @@ async function login(req, res){
         const user = userResult.rows[0];
         
         
-console.log(password,user.password_hash)
+
         // 2. Validate password
         const validPassword = await bcrypt.compare(password, user.password_hash);
     
@@ -39,14 +39,7 @@ console.log(password,user.password_hash)
 
         // 4. Sign Token (Ensure JWT_SECRET is in your .env)
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
-
-          // 2. Set the cookie
-    res.cookie('token', token, {
-        httpOnly: true,    // Prevents JavaScript access (highly recommended for security)
-        secure: true,      // Cookie only sent over HTTPS (use false for local development)
-        maxAge: 3600000,   // Expiry in milliseconds (1 hour)
-        sameSite: 'strict' // Helps prevent CSRF attacks
-    });
+        
         return  res.json({ token, user: payload , message: "Logged in"});
     } catch (err) {
         console.error('Login error:', err.message);

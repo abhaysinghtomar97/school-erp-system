@@ -1,10 +1,8 @@
 const bcrypt = require('bcryptjs'); // Using bcryptjs as seen in your screenshot
 const crypto = require('crypto');
 const pool = require('../config/db');
-// Assuming you exported transporter from your new utils folder!
-// const transporter = require('../utils/sendEmail');
-const { Resend } = require('resend');
-
+const MailService = require('../services/MailService');
+const { newUserCredentialsTemplate } = require('../template/emailTemplates');
 const getdashboard = async (req, res) => {
     try {
 
@@ -57,31 +55,26 @@ const getdashboard = async (req, res) => {
 };
 const CreateUser = async (req, res) => {
     const { name, email, role } = req.body;
-
     const client = await pool.connect();
 
     try {
         await client.query('BEGIN');
 
-        // ✅ FIX 1: Basic required check (minimal, not changing your style)
         if (!name || !email || !role) {
             await client.query('ROLLBACK');
             return res.status(400).json({ message: 'All fields are required' });
         }
 
-        // Check if user exists
         const existingUser = await client.query(
             'SELECT id FROM users WHERE email = $1',
             [email]
         );
 
-        // ✅ FIX 2: Prevent transaction leak
         if (existingUser.rows.length > 0) {
             await client.query('ROLLBACK');
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
-        // 🔒 KEEPING YOUR ORIGINAL PREFIX LOGIC (Point 6 unchanged)
         let prefix = '';
         if (role === 'TEACHER') prefix = 'fc_';
         else if (role === 'ADMIN') prefix = 'A_';
@@ -89,7 +82,6 @@ const CreateUser = async (req, res) => {
         const currentYear = new Date().getFullYear().toString().slice(-2);
         const searchPattern = `${prefix}${currentYear}%`;
 
-        // 🔒 KEEPING YOUR ORIGINAL ID LOGIC (Point 4 unchanged)
         const lastUserResult = await client.query(
             `SELECT institutional_id FROM users 
              WHERE institutional_id LIKE $1 
@@ -108,10 +100,7 @@ const CreateUser = async (req, res) => {
 
         const paddedSequence = String(nextSequence).padStart(3, '0');
         const institutionalId = `${prefix}${currentYear}${paddedSequence}`;
-
-        // ✅ FIX 3: Stronger temp password
         const tempPassword = crypto.randomBytes(8).toString('hex');
-
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(tempPassword, salt);
 
@@ -136,28 +125,23 @@ const CreateUser = async (req, res) => {
 
         await client.query('COMMIT');
 
+        // ... (your existing code) ...
+        
         res.status(201).json({
             message: 'User created successfully. Email is being sent.',
             user: newUser.rows[0]
         });
         
-
-        const resend = new Resend(process.env.RESEND_API_KEY);
-
-        (async function () {
-            const { data, error } = await resend.emails.send({
-                from:'gvs <onboarding@resend.dev>',
-                to: ['abhaysinghtomar97@gmail.com'],
-                subject: 'Hello World',
-                html: '<strong>It works!</strong>',
-            });
-
-            if (error) {
-                return console.error({ error });
-            }
-
-            console.log({ data });
-        })();
+        // --- MAIL LOGIC START ---
+        // Background Mail Execution
+        const emailHtml = newUserCredentialsTemplate(name, role, institutionalId, tempPassword);
+        
+        MailService.sendEmail({
+            to: email,
+            subject: 'Welcome to Golden Valley ERP - Your Login Credentials',
+            html: emailHtml
+        });
+        
 
     } catch (err) {
         await client.query('ROLLBACK');
