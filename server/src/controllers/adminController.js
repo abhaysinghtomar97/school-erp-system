@@ -503,9 +503,6 @@ const getSubjects = async (req, res) => {
 const createSubject = async (req, res) => {
     const { name, code, teacher_id, class_id } = req.body;
     
-    // ADD THIS LINE TEMPORARILY
-    console.log("Saving Subject with data:", { name, code, teacher_id, class_id });
-
     try {
         const query = `
             INSERT INTO subjects (name, code, teacher_id, class_id) 
