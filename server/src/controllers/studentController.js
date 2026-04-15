@@ -1,6 +1,9 @@
 const pool = require('../config/db');
 
-// --- 1. Get Student's Timetable ---
+
+
+
+// --- Get Student's Timetable ---
 const getMyTimetable = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -47,7 +50,7 @@ const getMyTimetable = async (req, res) => {
     }
 };
 
-// --- 2. Get Student's Attendance Record ---
+// --- Get Student's Attendance Record ---
 const getMyAttendance = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -75,7 +78,7 @@ const getMyAttendance = async (req, res) => {
     }
 };
 
-// --- 3. Get Student's Assignments and Grades ---
+// ---  Get Student's Assignments and Grades ---
 const getMyAssignmentsAndGrades = async (req, res) => {
     try {
         const studentId = req.user.id;
@@ -112,5 +115,6 @@ const getMyAssignmentsAndGrades = async (req, res) => {
 module.exports = {
     getMyTimetable,
     getMyAttendance,
-    getMyAssignmentsAndGrades
+    getMyAssignmentsAndGrades,
+    getMyData
 };

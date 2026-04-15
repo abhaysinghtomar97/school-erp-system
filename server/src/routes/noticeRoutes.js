@@ -5,7 +5,6 @@ const { verifyToken } = require('../middlewares/authMiddleware');
 
 // api/notice
 
-router.get('/', verifyToken, noticeController.getNotices);
 
 router.post('/', verifyToken, noticeController.createNotice);
 

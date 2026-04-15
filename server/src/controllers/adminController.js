@@ -1,8 +1,10 @@
-const bcrypt = require('bcryptjs'); // Using bcryptjs as seen in your screenshot
+const bcrypt = require('bcryptjs'); 
 const crypto = require('crypto');
 const pool = require('../config/db');
 const MailService = require('../services/MailService');
 const { newUserCredentialsTemplate } = require('../template/emailTemplates');
+
+
 const getdashboard = async (req, res) => {
     try {
 
@@ -34,14 +36,14 @@ const getdashboard = async (req, res) => {
             WHERE id = $1
         `;
 
-        // 🚀 Execute all 3 queries concurrently for maximum speed
+       
         const [statsResult, noticesResult, userResult] = await Promise.all([
             pool.query(statsQuery),
             pool.query(noticesQuery),
             pool.query(userQuery, [userId])
         ]);
 
-        // Send everything back in one clean package
+        
         res.status(200).json({
             stats: statsResult.rows[0],
             notices: noticesResult.rows,

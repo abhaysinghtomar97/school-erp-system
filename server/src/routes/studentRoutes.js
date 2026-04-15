@@ -1,19 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const studentController = require('../controllers/studentController');
-
-// Import authentication middlewares
 const { verifyToken, checkRole } = require('../middlewares/authMiddleware');
 
-// 1. Verify token exists
-router.use(verifyToken);
+// Combine the middlewares into an array for cleaner reading
+const studentAuth = [verifyToken, checkRole(['STUDENT'])];
 
-// 2. Verify the user is a STUDENT
-router.use(checkRole(['STUDENT']));
-
-// --- Protected Student Endpoints ---
-router.get('/timetable', studentController.getMyTimetable);
-router.get('/attendance', studentController.getMyAttendance);
-router.get('/assignments', studentController.getMyAssignmentsAndGrades);
+// Apply the combined middleware to each route individually
+router.get('/data', studentAuth, studentController.getMyData);
+router.get('/timetable', studentAuth, studentController.getMyTimetable);
+router.get('/attendance', studentAuth, studentController.getMyAttendance);
+router.get('/assignments', studentAuth, studentController.getMyAssignmentsAndGrades);
 
 module.exports = router;

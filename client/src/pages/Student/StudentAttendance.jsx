@@ -11,7 +11,7 @@ const StudentAttendance = () => {
         const fetchAttendance = async () => {
             try {
                 // Fetching from the endpoint we created in the last step
-                const response = await API.get('/student/attendance');
+                const response = await API.get('/student/attendance'); 
                 if (response.data.success) {
                     setAttendanceHistory(response.data.history);
                     

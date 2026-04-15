@@ -33,7 +33,8 @@ async function login(req, res){
             id: user.id,
             role: user.role,
             is_first_login: user.is_first_login,
-            name: user.name
+            name: user.name,
+            institutional_id: user.institutional_id
         };
         
 
@@ -41,12 +42,13 @@ async function login(req, res){
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
 
           // 2. Set the cookie
-    res.cookie('token', token, {
-        httpOnly: true,    // Prevents JavaScript access (highly recommended for security)
-        secure: true,      // Cookie only sent over HTTPS (use false for local development)
-        maxAge: 3600000,   // Expiry in milliseconds (1 hour)
-        sameSite: 'strict' // Helps prevent CSRF attacks
-    });
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+            sameSite: 'Strict', // Adjust as needed (Lax or None if cross-site)
+            maxAge: 8 * 60 * 60 * 1000 // 8 hours
+        });
+    
         return  res.json({ token, user: payload , message: "Logged in"});
     } catch (err) {
         console.error('Login error:', err.message);

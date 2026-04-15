@@ -50,7 +50,7 @@ const Login = () => {
             setloading(false);
         }
     };
-
+   
     return (
   <div className="min-h-screen bg-[url('/bg1.png')]  bg-cover bg-center flex items-center justify-center">
 
@@ -105,6 +105,9 @@ const Login = () => {
   
   {loading ? 'Logging in...' : 'Login'}
 </button>
+
+
+
 
       </form>
     </div>
