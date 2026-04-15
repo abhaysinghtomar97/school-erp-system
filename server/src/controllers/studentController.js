@@ -116,5 +116,5 @@ module.exports = {
     getMyTimetable,
     getMyAttendance,
     getMyAssignmentsAndGrades,
-    getMyData
+ 
 };
