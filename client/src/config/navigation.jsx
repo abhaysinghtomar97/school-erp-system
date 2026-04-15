@@ -57,7 +57,10 @@ export const adminLinks = [
     },
     {
         name: 'Manage Timetable', path: '/admin/timetable', icon: TimeTable
-    }
+    },
+    {
+        name: 'Manage Subjects', path: '/admin/subjects', icon: TimeTable
+    },
 ];;
 
 export const facultyLinks = [

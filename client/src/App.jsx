@@ -29,6 +29,7 @@ import StudentAttendance from './pages/Student/StudentAttendance';
 import StudentAssignments from './pages/Student/StudentAssignment';
 import RecentAnnouncements from './components/wedget/RecentAnnouncements';
 import AutoTitle from './components/AutoTitle';
+import ManageSubjects from './pages/Admin/ManageSubjects';
 
 
 
@@ -67,6 +68,7 @@ function App() {
             <Route path="enrollments" element={<ManageEnrollments />} />
             <Route path="timetable" element={<ManageTimetable/>} />
             <Route path="attendance" element={<ManageAttendance/>} />
+            <Route path="subjects" element={<ManageSubjects />} />
 
           </Route>
 

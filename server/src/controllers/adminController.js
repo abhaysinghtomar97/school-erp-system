@@ -386,7 +386,7 @@ const getSubjectsByClass = async (req, res) => {
 };
 
 // --- ATTENDANCE MANAGEMENT ---
-// 1. Fetch Student Logs (School-wide)
+
 const getStudentAttendanceLogs = async (req, res) => {
     const { date, classId } = req.query; // Using query params for filters
 
@@ -423,8 +423,6 @@ const getStudentAttendanceLogs = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error fetching logs" });
     }
 };
-
-// 2. Fetch Faculty Attendance
 const getFacultyAttendance = async (req, res) => {
     const { date } = req.query;
 
@@ -447,8 +445,6 @@ const getFacultyAttendance = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
-
-// 3. Mark Faculty Attendance
 const markFacultyAttendance = async (req, res) => {
     const { date, attendanceData } = req.body;
     const adminId = req.user.id; // The logged-in admin
@@ -478,7 +474,67 @@ const markFacultyAttendance = async (req, res) => {
     }
 };
 
+// ------ Subjects CRUD 
 
+// 1. Get all subjects with Teacher and Class names
+// adminController.js
+const getSubjects = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                s.id, 
+                s.name, 
+                s.code, 
+                u.name as teacher_name, 
+                c.name as class_name 
+            FROM subjects s
+            LEFT JOIN users u ON s.teacher_id = u.id
+            LEFT JOIN classes c ON s.class_id = c.id
+            ORDER BY s.created_at DESC;
+        `;
+        const { rows } = await pool.query(query);
+        res.json({ success: true, subjects: rows });
+    } catch (err) {
+        console.error("DB Query Error:", err.message); // This will show in your terminal
+        res.status(500).json({ success: false, message: "Database query failed" });
+    }
+};
+// 2. Add a new subject
+const createSubject = async (req, res) => {
+    const { name, code, teacher_id, class_id } = req.body;
+    
+    // ADD THIS LINE TEMPORARILY
+    console.log("Saving Subject with data:", { name, code, teacher_id, class_id });
+
+    try {
+        const query = `
+            INSERT INTO subjects (name, code, teacher_id, class_id) 
+            VALUES ($1, $2, $3, $4) RETURNING *
+        `;
+        // If teacher_id or class_id are empty strings "", Postgres will crash because "" is not a UUID
+        const { rows } = await pool.query(query, [
+            name, 
+            code || null, 
+            teacher_id || null, 
+            class_id || null
+        ]);
+        res.status(201).json({ success: true, subject: rows[0] });
+    } catch (err) {
+        console.error("DATABASE CRASH:", err.message); // This will tell you exactly what column failed
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// 3. Delete a subject
+const deleteSubject = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM subjects WHERE id = $1', [id]);
+        res.json({ success: true, message: 'Subject deleted' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
 
 
 module.exports = {
@@ -497,5 +553,9 @@ module.exports = {
     getSubjectsByClass,
     getStudentAttendanceLogs,
     getFacultyAttendance,
-    markFacultyAttendance
+    markFacultyAttendance,
+    getSubjects,
+    createSubject,
+    deleteSubject
+
 };

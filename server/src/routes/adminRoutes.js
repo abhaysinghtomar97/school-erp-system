@@ -29,5 +29,9 @@ router.get('/attendance/students', verifyToken, adminController.getStudentAttend
 router.get('/attendance/faculty', verifyToken, adminController.getFacultyAttendance);
 router.post('/attendance/faculty', verifyToken, adminController.markFacultyAttendance);
 
+//-----Subjectss-------
+router.get('/subjects', verifyToken, adminController.getSubjects);
+router.post('/subjects', verifyToken, adminController.createSubject);
+router.delete('/subjects/:id', verifyToken, adminController.deleteSubject);
 
 module.exports = router;
