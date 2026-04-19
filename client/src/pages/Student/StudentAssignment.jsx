@@ -11,6 +11,7 @@ const StudentAssignments = () => {
             try {
                 // Fetching from the student API endpoint we created
                 const response = await API.get('/student/assignments');
+                console.log(response)
                 if (response.data.success) {
                     setAssignments(response.data.assignments);
                 }

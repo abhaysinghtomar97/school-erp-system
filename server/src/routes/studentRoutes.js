@@ -11,5 +11,6 @@ const studentAuth = [verifyToken, checkRole(['STUDENT'])];
 router.get('/timetable', studentAuth, studentController.getMyTimetable);
 router.get('/attendance', studentAuth, studentController.getMyAttendance);
 router.get('/assignments', studentAuth, studentController.getMyAssignmentsAndGrades);
+router.get('/data', studentAuth , studentController.getData)
 
 module.exports = router;

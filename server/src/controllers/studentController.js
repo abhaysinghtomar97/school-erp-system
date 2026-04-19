@@ -112,9 +112,42 @@ const getMyAssignmentsAndGrades = async (req, res) => {
     }
 };
 
+const getData = async(req, res)=>{
+    try {
+        const studentId = req.user.id;
+        
+        // write a query for fetching student - name, id , email and  mobile number , also fetch class_name
+        const query = `
+            SELECT
+
+                u.name,
+                u.institutional_id,
+                u.email,
+                u.mobile_number,
+                c.name AS class_name
+            FROM users u
+            JOIN enrollments e ON u.id = e.student_id
+            JOIN classes c ON e.class_id = c.id
+            WHERE u.id = $1;
+        `;
+
+       
+        const { rows } = await pool.query(query, [studentId]);
+        
+        res.status(200).json({ success: true, data: rows[0] });
+    } catch (error) {
+        console.error("Error fetching student data:", error);
+        res.status(500).json({ success: false, message: "Server error fetching student data" });
+
+    }
+
+
+}
+
 module.exports = {
     getMyTimetable,
     getMyAttendance,
     getMyAssignmentsAndGrades,
+    getData
  
 };
