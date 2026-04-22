@@ -58,6 +58,7 @@ const StudentDashboard = () => {
                         {/* Header Row: Name & Status */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <h1 className="text-3xl font-black text-gray-800 tracking-tight">
+                                Welcome, {studentData.name.split(" ")[0]}!
 
                             </h1>
 

@@ -3,14 +3,24 @@ const crypto = require('crypto');
 const pool = require('../config/db');
 const MailService = require('../services/MailService');
 const { newUserCredentialsTemplate } = require('../template/emailTemplates');
+const redisClient = require('../utils/redis');
+const { clearCacheKeys } = require('../utils/cacheUtility');
 
 
 const getdashboard = async (req, res) => {
     try {
-
         const userId = req.user.id;
+       
+        const cacheKey = `gvs:admin:dashboard:${userId}`;
 
+        const cachedDashboard = await redisClient.get(cacheKey);
 
+        if(cachedDashboard){
+            console.log("⚡ Serving from Redis cache");
+            return res.status(200).json(JSON.parse(cachedDashboard));
+        }
+
+        console.log('🗄️ Serving from PostgreSQL');
 
         // 1. Stats Query
         const statsQuery = `
@@ -36,25 +46,32 @@ const getdashboard = async (req, res) => {
             WHERE id = $1
         `;
 
-       
         const [statsResult, noticesResult, userResult] = await Promise.all([
             pool.query(statsQuery),
             pool.query(noticesQuery),
             pool.query(userQuery, [userId])
         ]);
 
-        
-        res.status(200).json({
+        // final data object
+        const dashboardData = {
             stats: statsResult.rows[0],
             notices: noticesResult.rows,
             user: userResult.rows[0]
-        });
+        };
+
+        // Save to Redis before responding
+        //  (5 minutes) exp
+        await redisClient.set(cacheKey, JSON.stringify(dashboardData), 'EX', 300);
+
+        // 5. Send the response
+        res.status(200).json(dashboardData);
 
     } catch (error) {
         console.error("Dashboard error:", error);
         res.status(500).json({ message: "Server error" });
     }
 };
+
 const CreateUser = async (req, res) => {
     const { name, email, role } = req.body;
     const client = await pool.connect();
@@ -117,7 +134,6 @@ const CreateUser = async (req, res) => {
                 [name, email, passwordHash, role, institutionalId]
             );
         } catch (err) {
-            // ✅ FIX 4: Handle duplicate institutional_id (race condition)
             if (err.code === '23505') {
                 await client.query('ROLLBACK');
                 return res.status(409).json({ message: 'ID conflict, please retry' });
@@ -125,10 +141,24 @@ const CreateUser = async (req, res) => {
             throw err;
         }
 
+        // 1. Commit the transaction to PostgreSQL FIRST
         await client.query('COMMIT');
 
-        // ... (your existing code) ...
-        
+        // ---------------------------------------------------------
+        // 🧹 2. REDIS CACHE INVALIDATION (Post-Commit)
+        // ---------------------------------------------------------
+        // Clear specific directory based on who was created
+        if (role === 'TEACHER') {
+            await clearCacheKeys('gvs:faculty:all');
+        } else if (role === 'STUDENT') {
+            await clearCacheKeys('gvs:students:all');
+        }
+
+        // Always clear admin dashboards because the total user counts have changed
+        await clearCacheKeys('gvs:admin:dashboard:*');
+        // ---------------------------------------------------------
+
+        // 3. Send response to client
         res.status(201).json({
             message: 'User created successfully. Email is being sent.',
             user: newUser.rows[0]
@@ -142,8 +172,7 @@ const CreateUser = async (req, res) => {
             to: email,
             subject: 'Welcome to Golden Valley ERP - Your Login Credentials',
             html: emailHtml
-        });
-        
+        }).catch(err => console.error("Background email failed:", err)); // Added catch to prevent unhandled promise rejection
 
     } catch (err) {
         await client.query('ROLLBACK');
@@ -161,6 +190,20 @@ const CreateUser = async (req, res) => {
 
 const getStudents = async (req, res) => {
     try {
+        // Define a clear, static cache key since this fetches the whole list
+        const cacheKey = 'gvs:students:all';
+
+        // 1. Check Redis First
+        const cachedStudents = await redisClient.get(cacheKey);
+
+        if (cachedStudents) {
+            console.log("⚡ Serving from Redis cache");
+            return res.status(200).json({ Students: JSON.parse(cachedStudents) });
+        }
+
+        console.log('🗄️ Serving from PostgreSQL');
+
+        // 2. Execute PostgreSQL Query (Cache Miss)
         const query = `
             SELECT 
                 u.id, 
@@ -180,6 +223,12 @@ const getStudents = async (req, res) => {
         `;
 
         const result = await pool.query(query);
+
+        // 3. Save results to Redis before responding
+        // Using a 30-minute expiration (1800 seconds)
+        await redisClient.set(cacheKey, JSON.stringify(result.rows), 'EX', 1800);
+
+        // 4. Send the response
         res.status(200).json({ Students: result.rows });
 
     } catch (err) {
@@ -188,13 +237,23 @@ const getStudents = async (req, res) => {
     }
 };
 
+
+
 const getFaculty = async (req, res) => {
     try {
+        const cacheKey = 'gvs:faculty:all';
+
+        const cacheFaculty = await redisClient.get(cacheKey);
+
+        if(cacheFaculty){
+            return res.status(200).json({faculty : JSON.parse(cacheFaculty)});
+        }
+
         const result = await pool.query(
             "SELECT id, name, email, institutional_id, role, is_first_login, is_active FROM users WHERE role = 'TEACHER' ORDER BY institutional_id ASC"
         );
+        await redisClient.set(cacheKey,JSON.stringify(result.rows), 'EX', 1800)
         res.status(200).json({ faculty: result.rows });
-
     } catch (err) {
         console.error('Error fetching faculty:', err.message);
         res.status(500).json({ message: 'Server Error' });
