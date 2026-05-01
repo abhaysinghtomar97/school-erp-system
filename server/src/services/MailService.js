@@ -13,6 +13,7 @@ class MailService {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
             },
+            family: 4
         });
 
         // Auto-verify connection when the service is instantiated
