@@ -123,7 +123,7 @@ const ManageTimetable = () => {
 
             {/* NEW: Display a loading spinner if data is being fetched */}
             {selectedClass && isTableLoading && (
-                <div className="flex flex-col items-center justify-center p-12 border border-gray-200 rounded-lg bg-white">
+                <div className="flex flex-col items-center justify-center p-1+2 border border-gray-200 rounded-lg bg-white">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-orange-500 mb-4"></div>
                     <p className="text-gray-500 font-medium">Loading timetable...</p>
                 </div>
@@ -134,12 +134,7 @@ const ManageTimetable = () => {
                 <div className="overflow-x-auto border border-gray-200 rounded-lg shadow">
                     <div className="bg-orange-500 text-white p-3 font-bold text-lg rounded-t-lg flex justify-between items-center">
                         <span>Time Table</span>
-                        <div className="flex gap-2 text-xl">
-                            <span className="cursor-pointer">◱</span>
-                            <span className="cursor-pointer">↻</span>
-                            <span className="cursor-pointer">─</span>
-                            <span className="cursor-pointer">✖</span>
-                        </div>
+                        
                     </div>
 
                     <table className="w-full border-collapse border border-gray-200 bg-white">

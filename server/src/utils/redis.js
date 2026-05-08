@@ -1,6 +1,6 @@
 const  Redis  = require('ioredis');
-
-const redisClient = new Redis(process.env.REDIS_URL, {
+const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+const redisClient = new Redis(redisUrl, {
     retryStrategy : (times)=>{
         return Math.min(times * 50, 2000);
     },
