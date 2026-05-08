@@ -16,11 +16,11 @@ const getdashboard = async (req, res) => {
         const cachedDashboard = await redisClient.get(cacheKey);
 
         if(cachedDashboard){
-            console.log("⚡ Serving from Redis cache");
+            // console.log("⚡ Serving from Redis cache");
             return res.status(200).json(JSON.parse(cachedDashboard));
         }
 
-        console.log('🗄️ Serving from PostgreSQL');
+        // console.log('🗄️ Serving from PostgreSQL');
 
         // 1. Stats Query
         const statsQuery = `
@@ -197,11 +197,11 @@ const getStudents = async (req, res) => {
         const cachedStudents = await redisClient.get(cacheKey);
 
         if (cachedStudents) {
-            console.log("⚡ Serving from Redis cache");
+            // console.log("⚡ Serving from Redis cache");
             return res.status(200).json({ Students: JSON.parse(cachedStudents) });
         }
 
-        console.log('🗄️ Serving from PostgreSQL');
+        // console.log('🗄️ Serving from PostgreSQL');
 
         // 2. Execute PostgreSQL Query (Cache Miss)
         const query = `
