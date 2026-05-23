@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const pool = require('../config/db');
 const { newUserCredentialsTemplate } = require('../template/emailTemplates');
 
-const { default: MailService } = require('../services/MailService');
+const  MailService  = require('../services/MailService');
 const validator = require('validator')
 
 const getdashboard = async (req, res) => {
