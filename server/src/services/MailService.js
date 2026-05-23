@@ -3,18 +3,17 @@ dotenv.config();
 
 class MailService {
     constructor() {
-        // Initialize Brevo API configuration
         this.apiKey = process.env.BREVO_API_KEY;
         this.apiUrl = 'https://api.brevo.com/v3/smtp/email';
-
-        // Auto-verify API key presence on server startup
-        this.verifyConnection();
+        
+        // Renamed to reflect its actual purpose
+        this.verifyConfig();
     }
 
     /**
-     * Verifies if the API Key is loaded correctly
+     * Verifies if the API Key is loaded correctly in the environment
      */
-    verifyConnection() {
+    verifyConfig() {
         if (this.apiKey) {
             console.log('✅ [MailService] HTTP API Key found. Ready to send emails.');
         } else {
@@ -25,10 +24,18 @@ class MailService {
     /**
      * The core sending method using HTTP POST
      * @param {Object} options - { to, subject, html, text, attachments }
+     * @param {number} timeoutMs - Request timeout in milliseconds (default: 10000ms)
      */
-    async sendEmail({ to, subject, html, text, attachments = [] }) {
+    async sendEmail({ to, subject, html, text, attachments = [] }, timeoutMs = 10000) {
+        // 1. Input Validation
+        if (!to || !subject) {
+            return { success: false, error: 'Missing required fields: "to" and "subject" are mandatory.' };
+        }
+        if (!html && !text) {
+            return { success: false, error: 'Message body empty: Must provide either "html" or "text".' };
+        }
+
         try {
-            // Format the payload according to Brevo's REST API requirements
             const payload = {
                 sender: {
                     name: process.env.MAIL_FROM_NAME,
@@ -36,21 +43,26 @@ class MailService {
                 },
                 to: [{ email: to }],
                 subject: subject,
-                htmlContent: html || text, // Brevo prefers HTML content
             };
 
-            // Handle attachments if they exist
+            // 2. Support both htmlContent and textContent
+            if (html) payload.htmlContent = html;
+            if (text) payload.textContent = text;
+
+            // Handle attachments
             if (attachments && attachments.length > 0) {
                 payload.attachment = attachments.map(att => ({
                     name: att.filename,
-                    // Brevo requires attachments to be base64 encoded strings
                     content: Buffer.isBuffer(att.content) 
                         ? att.content.toString('base64') 
                         : Buffer.from(att.content).toString('base64')
                 }));
             }
 
-            // Send HTTP request to Brevo using native fetch
+            // 3. Request Timeout Handling via AbortController
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
             const response = await fetch(this.apiUrl, {
                 method: 'POST',
                 headers: {
@@ -58,12 +70,26 @@ class MailService {
                     'api-key': this.apiKey,
                     'content-type': 'application/json'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
+                signal: controller.signal // Bind the abort signal
             });
 
+            clearTimeout(timeout); // Clear the timeout if request completes
+
+            // 4. Better Error Parsing
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(JSON.stringify(errorData));
+                let errorDetails = `HTTP ${response.status} ${response.statusText}`;
+                
+                // Defensively parse error body (could be JSON, could be raw text)
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    const errorJson = await response.json();
+                    errorDetails = JSON.stringify(errorJson);
+                } else {
+                    errorDetails = await response.text();
+                }
+                
+                throw new Error(errorDetails);
             }
 
             const info = await response.json();
@@ -71,6 +97,12 @@ class MailService {
             return { success: true, messageId: info.messageId };
 
         } catch (error) {
+            // Check if the error was triggered by our AbortController
+            if (error.name === 'AbortError') {
+                console.error(`🔴 [MailService] Request to Brevo timed out after ${timeoutMs}ms.`);
+                return { success: false, error: 'Request Timeout' };
+            }
+
             console.error(`🔴 [MailService] Failed to send email to ${to}:`, error.message);
             return { success: false, error: error.message };
         }

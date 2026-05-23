@@ -20,8 +20,16 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // allow ALL vercel deployments
+    // allow all vercel deployments
     if (origin.includes("vercel.app")) {
+      return callback(null, true);
+    }
+
+    // allow custom production domain
+    if (
+      origin === "https://erp-gvs.in" ||
+      origin === "https://www.erp-gvs.in"
+    ) {
       return callback(null, true);
     }
 
