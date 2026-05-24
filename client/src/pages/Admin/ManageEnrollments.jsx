@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 
+// Helper function to calculate the dynamic academic year on the frontend
+const getCurrentAcademicYear = () => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+
+    if (currentMonth >= 4) {
+        return `${currentYear}-${currentYear + 1}`;
+    } else {
+        return `${currentYear - 1}-${currentYear}`;
+    }
+};
+
 const ManageEnrollments = () => {
     const [classes, setClasses] = useState([]);
     const [allStudents, setAllStudents] = useState([]);
@@ -11,29 +24,29 @@ const ManageEnrollments = () => {
 
     const [loading, setLoading] = useState(true);
     const [enrolling, setEnrolling] = useState(false);
+    const [processingAction, setProcessingAction] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
     // 1. Fetch Classes and Students when page loads
+    const fetchInitialData = async () => {
+        try {
+            const [classesRes, studentsRes] = await Promise.all([
+                API.get('/admin/classes'),
+                API.get('/admin/students')
+            ]);
+            setClasses(Array.isArray(classesRes.data.classes) ? classesRes.data.classes : []);
+
+            const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studentsRes.data.Students || studentsRes.data.students || [];
+            setAllStudents(studentArray);
+
+            setLoading(false);
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Failed to load initial data.' });
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchInitialData = async () => {
-            try {
-                const [classesRes, studentsRes] = await Promise.all([
-                    API.get('/admin/classes'),
-                    API.get('/admin/students')
-                ]);
-                setClasses(Array.isArray(classesRes.data.classes) ? classesRes.data.classes : []);
-
-                // Assuming your student route returns an array directly or inside a property
-                // GOOD: Looking for capital 'Students' (I also left the lowercase one in there just as a safety net!)
-                const studentArray = Array.isArray(studentsRes.data) ? studentsRes.data : studentsRes.data.Students || studentsRes.data.students || [];
-                setAllStudents(studentArray);
-
-                setLoading(false);
-            } catch (err) {
-                setMessage({ type: 'error', text: 'Failed to load initial data.' });
-                setLoading(false);
-            }
-        };
         fetchInitialData();
     }, []);
 
@@ -69,8 +82,9 @@ const ManageEnrollments = () => {
                 student_id: selectedStudent
             });
             setMessage({ type: 'success', text: 'Student added successfully!' });
-            setSelectedStudent(''); // Reset dropdown
-            fetchRoster(selectedClass); // Refresh the roster table!
+            setSelectedStudent(''); 
+            fetchRoster(selectedClass);
+            fetchInitialData(); // Refresh students to update the dropdown filter
         } catch (err) {
             setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to enroll student.' });
         } finally {
@@ -78,10 +92,55 @@ const ManageEnrollments = () => {
         }
     };
 
-    // Filter out students who are ALREADY in the roster so the Manager can't double-add them
-    const availableStudents = allStudents.filter(
-        student => !roster.some(r => r.id === student.id)
-    );
+    // 4. Handle Individual Student Archiving (Promotion/Transfer)
+    const handleArchiveStudent = async (studentId) => {
+        if (!window.confirm("Are you sure you want to archive this student's enrollment?")) return;
+        
+        setProcessingAction(true);
+        setMessage({ type: '', text: '' });
+        
+        try {
+            const academic_year = getCurrentAcademicYear();
+            // Ensure this PUT route matches your Express backend router for archiveStudentEnrollment
+            await API.put('/admin/enrollments/archive', { 
+                student_id: studentId, 
+                academic_year 
+            });
+            setMessage({ type: 'success', text: 'Student archived successfully.' });
+            fetchRoster(selectedClass);
+            fetchInitialData();
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to archive student.' });
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    // 5. Handle Bulk Class Archiving (End of Year)
+    const handleBulkArchive = async () => {
+        if (!window.confirm("WARNING: This will archive all active enrollments for this class. Proceed with End of Year promotion?")) return;
+        
+        setProcessingAction(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            const academic_year = getCurrentAcademicYear();
+            // Ensure this PUT route matches your Express backend router for bulkArchiveClass
+            await API.put('/admin/enrollments/classes/archive', { 
+                class_id: selectedClass, 
+                academic_year 
+            });
+            setMessage({ type: 'success', text: 'Class archived successfully! All students removed from active roster.' });
+            fetchRoster(selectedClass);
+            fetchInitialData();
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to archive class.' });
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    const availableStudents = allStudents.filter(student => !student.is_enrolled);
 
     return (
         <div className="max-w-6xl mx-auto p-6 font-sans">
@@ -112,7 +171,7 @@ const ManageEnrollments = () => {
                             </select>
                         </div>
 
-                        {/* Step 2: Add Student (Only visible if a class is selected) */}
+                        {/* Step 2: Add Student */}
                         {selectedClass && (
                             <div className="bg-indigo-50 p-6 rounded-xl shadow-sm border border-indigo-100">
                                 <h3 className="text-lg font-semibold text-indigo-900 mb-4">2. Add Student to Class</h3>
@@ -140,7 +199,7 @@ const ManageEnrollments = () => {
 
                                     <button
                                         type="submit"
-                                        disabled={enrolling || !selectedStudent}
+                                        disabled={enrolling || !selectedStudent || processingAction}
                                         className="w-full p-3 text-white font-semibold rounded transition bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300"
                                     >
                                         {enrolling ? 'Enrolling...' : 'Enroll Student'}
@@ -160,9 +219,20 @@ const ManageEnrollments = () => {
                             <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
                                 <div className="bg-indigo-600 px-6 py-4 flex justify-between items-center">
                                     <h3 className="text-white font-bold text-lg">Current Roster</h3>
-                                    <span className="bg-white text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
-                                        {roster.length} Enrolled
-                                    </span>
+                                    <div className="flex gap-4 items-center">
+                                        <span className="bg-white text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
+                                            {roster.length} Enrolled
+                                        </span>
+                                        {roster.length > 0 && (
+                                            <button 
+                                                onClick={handleBulkArchive}
+                                                disabled={processingAction}
+                                                className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-1 rounded transition disabled:opacity-50"
+                                            >
+                                                Archive Entire Class
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full text-left text-sm text-gray-600">
@@ -170,12 +240,13 @@ const ManageEnrollments = () => {
                                             <tr>
                                                 <th className="px-6 py-4 font-semibold">Student ID</th>
                                                 <th className="px-6 py-4 font-semibold">Name</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {roster.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan="2" className="px-6 py-8 text-center text-gray-500 italic">
+                                                    <td colSpan="3" className="px-6 py-8 text-center text-gray-500 italic">
                                                         No students are enrolled in this class yet.
                                                     </td>
                                                 </tr>
@@ -184,6 +255,15 @@ const ManageEnrollments = () => {
                                                     <tr key={student.id} className="hover:bg-gray-50 transition-colors">
                                                         <td className="px-6 py-4 font-mono font-medium text-gray-900">{student.institutional_id}</td>
                                                         <td className="px-6 py-4 font-medium text-gray-800">{student.name}</td>
+                                                        <td className="px-6 py-4 text-right">
+                                                            <button 
+                                                                onClick={() => handleArchiveStudent(student.id)}
+                                                                disabled={processingAction}
+                                                                className="text-red-500 hover:text-red-700 font-medium text-sm disabled:opacity-50"
+                                                            >
+                                                                Archive
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 ))
                                             )}

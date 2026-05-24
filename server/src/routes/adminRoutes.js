@@ -14,6 +14,8 @@ router.post('/classes', adminController.createClass);
 router.get('/classes', adminController.getClasses);
 router.get('/classes/:class_id/roster', adminController.getClassRoster);
 router.post('/enrollments', adminController.enrollStudent);
+router.put('/enrollments/archive',verifyToken, adminController.archiveStudentEnrollment);
+router.put('/enrollments/classes/archive', verifyToken, adminController.bulkArchiveClass);
 
 // --- TIMETABLE ROUTES ---
 // We are now using your existing verifyToken middleware here

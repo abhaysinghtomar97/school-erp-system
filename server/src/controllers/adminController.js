@@ -2,8 +2,9 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const pool = require('../config/db');
 const { newUserCredentialsTemplate } = require('../template/emailTemplates');
+const { getCurrentAcademicYear } = require('../utils/helper')
 
-const  MailService  = require('../services/MailService');
+const MailService = require('../services/MailService');
 const validator = require('validator')
 
 const getdashboard = async (req, res) => {
@@ -164,8 +165,8 @@ const CreateUser = async (req, res) => {
         console.error('Error creating user:', err.message);
 
         if (!res.headersSent) {
-            res.status(500).json({ 
-                message: 'Failed to create user. If email was unreachable, creation is aborted.' 
+            res.status(500).json({
+                message: 'Failed to create user. If email was unreachable, creation is aborted.'
             });
         }
     } finally {
@@ -177,7 +178,7 @@ const CreateUser = async (req, res) => {
 
 const getStudents = async (req, res) => {
     try {
-        
+
         // 2. Execute PostgreSQL Query (Cache Miss)
         const query = `
             SELECT 
@@ -188,18 +189,17 @@ const getStudents = async (req, res) => {
                 u.role, 
                 u.is_first_login, 
                 u.is_active,
-                STRING_AGG(c.name, ', ') AS enrolled_classes
+                c.name AS current_class
             FROM users u
-            LEFT JOIN enrollments e ON u.id = e.student_id
+            LEFT JOIN enrollments e ON u.id = e.student_id AND e.is_active = true
             LEFT JOIN classes c ON e.class_id = c.id
             WHERE u.role = 'STUDENT'
-            GROUP BY u.id
             ORDER BY u.institutional_id ASC
         `;
 
         const result = await pool.query(query);
 
-      
+
         // 4. Send the response
         res.status(200).json({ Students: result.rows });
 
@@ -213,12 +213,12 @@ const getStudents = async (req, res) => {
 
 const getFaculty = async (req, res) => {
     try {
-        
-       
+
+
         const result = await pool.query(
             "SELECT id, name, email, institutional_id, role, is_first_login, is_active FROM users WHERE role = 'TEACHER' ORDER BY institutional_id ASC"
         );
-        
+
         res.status(200).json({ faculty: result.rows });
     } catch (err) {
         console.error('Error fetching faculty:', err.message);
@@ -297,8 +297,8 @@ const getClassRoster = async (req, res) => {
         const result = await pool.query(`
             SELECT users.id, users.name, users.institutional_id, users.email 
             FROM users 
-            JOIN enrollments ON users.id = enrollments.student_id 
-            WHERE enrollments.class_id = $1
+            JOIN enrollments e ON users.id = e.student_id 
+            WHERE e.class_id = $1 AND e.is_active = true
             ORDER BY users.name ASC
         `, [class_id]);
 
@@ -311,17 +311,81 @@ const getClassRoster = async (req, res) => {
 
 const enrollStudent = async (req, res) => {
     const { student_id, class_id } = req.body;
+    const dynamicAcademicYear = getCurrentAcademicYear();
+
     try {
         await pool.query(
-            'INSERT INTO enrollments (student_id, class_id) VALUES ($1, $2)',
-            [student_id, class_id]
+            `INSERT INTO enrollments (student_id, class_id, academic_year, is_active) 
+             VALUES ($1, $2, $3, true)`,
+            [student_id, class_id, dynamicAcademicYear]
         );
         res.status(201).json({ message: 'Student successfully enrolled!' });
     } catch (err) {
         if (err.code === '23505') {
-            return res.status(400).json({ message: 'Student is already enrolled in this class.' });
+            return res.status(400).json({ message: `Student already has an active enrollment for the ${dynamicAcademicYear} session.` });
         }
         console.error('Error enrolling student:', err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+// 2. ARCHIVE A SINGLE STUDENT (Individual Promotion/Transfer)
+const archiveStudentEnrollment = async (req, res) => {
+    const { student_id, academic_year } = req.body;
+    const admin_id = req.user?.id;
+    
+
+    if (!admin_id) {
+        return res.status(401).json({ message: 'Unauthorized: Admin context missing.' });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE enrollments 
+             SET is_active = false 
+             WHERE student_id = $1 AND academic_year = $2 AND is_active = true
+             RETURNING *`,
+            [student_id, academic_year]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'No active enrollment found for this student in the specified year.' });
+        }
+
+        res.status(200).json({
+            message: 'Student enrollment successfully archived.',
+            archivedRecord: result.rows[0]
+        });
+
+    } catch (err) {
+        console.error('Error archiving enrollment:', err.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// ==========================================
+// 3. ARCHIVE AN ENTIRE CLASS (End of Year Bulk Action)
+// ==========================================
+const bulkArchiveClass = async (req, res) => {
+    const { class_id, academic_year } = req.body;
+    const admin_id = req.user?.id;
+    if (!admin_id) {
+        return res.status(401).json({ message: 'Unauthorized: Admin context missing.' });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE enrollments 
+             SET is_active = false 
+             WHERE class_id = $1 AND academic_year = $2 AND is_active = true`,
+            [class_id, academic_year]
+        );
+
+        res.status(200).json({
+            message: `Successfully archived ${result.rowCount} student enrollments for the class.`
+        });
+
+    } catch (err) {
+        console.error('Error archiving class:', err.message);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -504,7 +568,7 @@ const markFacultyAttendance = async (req, res) => {
 // ------ Subjects CRUD 
 
 // 1. Get all subjects with Teacher and Class names
-// adminController.js
+
 const getSubjects = async (req, res) => {
     try {
         const query = `
@@ -570,6 +634,8 @@ module.exports = {
     getClasses,
     getClassRoster,
     enrollStudent,
+    archiveStudentEnrollment,
+    bulkArchiveClass,
     getAllPeriods,
     getdashboard,
     getClassTimetable,

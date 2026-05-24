@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 
 const ManageStudents = () => {
-    // --- Data State (From your original code) ---
+    // --- Data State ---
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -12,12 +12,10 @@ const ManageStudents = () => {
     const [limit, setLimit] = useState(10);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Fetch students exactly as you wrote it
     useEffect(() => {
         fetchStudents();
     }, []);
 
-    // Reset to page 1 whenever the user types a new search or changes the limit
     useEffect(() => {
         setPage(1);
     }, [searchTerm, limit]);
@@ -40,13 +38,11 @@ const ManageStudents = () => {
         }
     };
 
-    // Toggle status exactly as you wrote it
     const handleToggleStatus = async (userId, currentStatus) => {
         try {
             await API.put(`/admin/users/${userId}/status`, {
                 is_active: !currentStatus
             });
-            // Instantly update the React UI
             setStudents(students.map(student =>
                 student.id === userId ? { ...student, is_active: !currentStatus } : student
             ));
@@ -56,34 +52,26 @@ const ManageStudents = () => {
         }
     };
 
-
-
     // --- Client-Side Search & Pagination Logic ---
-    // 1. Filter the raw data based on the search term
     const filteredStudents = students.filter(student =>
         student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.institutional_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // 2. Calculate pagination details
     const totalEntries = filteredStudents.length;
     const totalPages = Math.ceil(totalEntries / limit) || 1;
     const startEntry = (page - 1) * limit;
     const endEntry = Math.min(page * limit, totalEntries);
-
-    // 3. Slice the array to only show the current page's students
     const currentStudents = filteredStudents.slice(startEntry, endEntry);
 
-    // --- Export Handlers (Basic Implementations) ---
-    const handlePrint = () => window.print();
     // --- Export Handlers ---
+    const handlePrint = () => window.print();
 
-    // 1. COPY: Copies tab-separated data to clipboard
     const handleCopy = () => {
-        const headers = ['Institutional ID', 'Student Name', 'Email', 'Status'];
+        const headers = ['Institutional ID', 'Student Name', 'Email', 'Classes', 'Status'];
         const rows = filteredStudents.map(s =>
-            `${s.institutional_id}\t${s.name}\t${s.email}\t${s.is_active ? 'Active' : 'Inactive'}`
+            `${s.institutional_id}\t${s.name}\t${s.email}\t${s.current_class || 'Unassigned'}\t${s.is_active ? 'Active' : 'Inactive'}`
         );
         const textToCopy = [headers.join('\t'), ...rows].join('\n');
 
@@ -92,11 +80,10 @@ const ManageStudents = () => {
             .catch(() => alert("Failed to copy data."));
     };
 
-    // 2. CSV: Generates and downloads a .csv file
     const handleCSV = () => {
-        const headers = ['Institutional ID,Student Name,Email Address,Status'];
+        const headers = ['Institutional ID,Student Name,Email Address,Classes,Status'];
         const rows = filteredStudents.map(s =>
-            `"${s.institutional_id}","${s.name}","${s.email}","${s.is_active ? 'Active' : 'Inactive'}"`
+            `"${s.institutional_id}","${s.name}","${s.email}","${s.current_class || 'Unassigned'}","${s.is_active ? 'Active' : 'Inactive'}"`
         );
         const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n');
 
@@ -109,12 +96,11 @@ const ManageStudents = () => {
         document.body.removeChild(link);
     };
 
-    // 3. EXCEL: Generates a CSV formatted for Excel
     const handleExcel = () => {
-        // Without heavy libraries like 'xlsx', Excel perfectly reads CSVs.
-        // We trigger the exact same logic as CSV, but you could name it .xls if preferred.
         handleCSV();
     };
+
+
 
     return (
         <div className="p-6 font-sans text-gray-700 bg-[#f8f9fa] min-h-screen">
@@ -215,8 +201,8 @@ const ManageStudents = () => {
                                         <td className="p-3 border-r border-gray-200 font-medium text-[#2a3f54]">{student.name}</td>
                                         <td className="p-3 border-r border-gray-200 text-gray-600">{student.email}</td>
                                         <td className="p-3 border-r border-gray-200 print:border-none">
-                                            {student.enrolled_classes ? (
-                                                <span className="text-gray-700 text-xs">{student.enrolled_classes}</span>
+                                            {student.current_class ? (
+                                                <span className="text-gray-700 text-xs">{student.current_class}</span>
                                             ) : (
                                                 <span className="text-gray-400 italic text-xs">Unassigned</span>
                                             )}
