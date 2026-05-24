@@ -47,7 +47,7 @@ const AdminDashboard = () => {
         setPosting(true);
         try {
             const response = await API.post('/notice', newNotice);
-            
+
 
             setNotices([response.data.notice, ...notices]);
             setNewNotice({ title: '', content: '', target_audience: 'Everyone' });
@@ -58,10 +58,27 @@ const AdminDashboard = () => {
             setPosting(false);
         }
     };
+    // --- Delete Notice Handler ---
+    const handleDeleteNotice = async (noticeId) => {
+
+        try {
+
+            await API.delete(`/delete-notice/${noticeId}`);
+
+            setNotices((prevNotices) =>
+                prevNotices.filter(
+                    (notice) => notice.id !== noticeId
+                )
+            );
+
+        } catch (error) {
+            console.error("Error deleting notice:", error);
+        }
+    };
 
     return (
         <div className="max-w-5xl mx-auto font-sans text-gray-800 space-y-6">
-            
+
             {/* 1. WELCOME & BIODATA CARD */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-10"></div>
@@ -114,8 +131,8 @@ const AdminDashboard = () => {
                     </div>
                     <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-  <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
-</svg>
+                            <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
+                        </svg>
 
                     </div>
                 </div>
@@ -126,8 +143,8 @@ const AdminDashboard = () => {
                     </div>
                     <div className="w-12 h-12 bg-teal-50 text-teal-500 rounded-full flex items-center justify-center text-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-  <path fillRule="evenodd" d="M3 2.25a.75.75 0 0 0 0 1.5v16.5h-.75a.75.75 0 0 0 0 1.5H15v-18a.75.75 0 0 0 0-1.5H3ZM6.75 19.5v-2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75ZM6 6.75A.75.75 0 0 1 6.75 6h.75a.75.75 0 0 1 0 1.5h-.75A.75.75 0 0 1 6 6.75ZM6.75 9a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM6 12.75a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 6a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75Zm-.75 3.75A.75.75 0 0 1 10.5 9h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 12a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM16.5 6.75v15h5.25a.75.75 0 0 0 0-1.5H21v-12a.75.75 0 0 0 0-1.5h-4.5Zm1.5 4.5a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Zm.75 2.25a.75.75 0 0 0-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75v-.008a.75.75 0 0 0-.75-.75h-.008ZM18 17.25a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clipRule="evenodd" />
-</svg>
+                            <path fillRule="evenodd" d="M3 2.25a.75.75 0 0 0 0 1.5v16.5h-.75a.75.75 0 0 0 0 1.5H15v-18a.75.75 0 0 0 0-1.5H3ZM6.75 19.5v-2.25a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v2.25a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75ZM6 6.75A.75.75 0 0 1 6.75 6h.75a.75.75 0 0 1 0 1.5h-.75A.75.75 0 0 1 6 6.75ZM6.75 9a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM6 12.75a.75.75 0 0 1 .75-.75h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 6a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75Zm-.75 3.75A.75.75 0 0 1 10.5 9h.75a.75.75 0 0 1 0 1.5h-.75a.75.75 0 0 1-.75-.75ZM10.5 12a.75.75 0 0 0 0 1.5h.75a.75.75 0 0 0 0-1.5h-.75ZM16.5 6.75v15h5.25a.75.75 0 0 0 0-1.5H21v-12a.75.75 0 0 0 0-1.5h-4.5Zm1.5 4.5a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Zm.75 2.25a.75.75 0 0 0-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75v-.008a.75.75 0 0 0-.75-.75h-.008ZM18 17.25a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clipRule="evenodd" />
+                        </svg>
 
                     </div>
                 </div>
@@ -140,10 +157,10 @@ const AdminDashboard = () => {
                 <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-fit">
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-  <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
-  <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 6 6 0 0 1 0 8.486.75.75 0 0 1-1.06-1.061 4.5 4.5 0 0 0 0-6.364.75.75 0 0 1 0-1.06Z" />
-</svg>
-</span> Post Notice
+                            <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
+                            <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 6 6 0 0 1 0 8.486.75.75 0 0 1-1.06-1.061 4.5 4.5 0 0 0 0-6.364.75.75 0 0 1 0-1.06Z" />
+                        </svg>
+                        </span> Post Notice
                     </h3>
                     <form onSubmit={handlePostNotice} className="space-y-4">
                         <input
@@ -201,9 +218,42 @@ const AdminDashboard = () => {
                             notices.map(notice => (
                                 <div key={notice.id} className="p-4 bg-gray-50 border border-gray-100 rounded-lg shadow-sm">
                                     <div className="flex justify-between items-start mb-2">
+                                        <button
+                                            onClick={() => handleDeleteNotice(notice.id)}
+                                            className="
+                                                group
+                                                relative
+                                                overflow-hidden
+                                                px-4 py-2
+                                                rounded-xl
+                                                bg-gradient-to-r from-red-500 to-red-700
+                                                text-white
+                                                font-semibold
+                                                shadow-md
+                                                transition-all duration-300 ease-in-out
+                                                hover:scale-105
+                                                hover:shadow-red-500/40
+                                                hover:shadow-xl
+                                                active:scale-99
+                                                cursor-pointer
+                                                            " >
+                                            <span
+                                                className="
+                                                            absolute inset-0
+                                                            bg-white/20
+                                                            translate-x-[-100%]
+                                                            group-hover:translate-x-[100%]
+                                                            transition-transform duration-700">
+                                                                                              
+                                            </span>
+
+                                            <span className="relative z-10 flex items-center gap-2">
+                                                🗑 Delete
+                                            </span>
+                                        </button>
                                         <h4 className="font-bold text-gray-800 text-md">{notice.title}</h4>
                                         <span className={`text-[10px] px-2 py-1 rounded-full font-semibold uppercase tracking-wider ${notice.target_audience === 'ALL' ? 'bg-blue-100 text-blue-700' :
-                                                notice.target_audience === 'STUDENT' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
+                                            notice.target_audience === 'STUDENT' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
                                             }`}>
                                             To: {notice.target_audience}
                                         </span>

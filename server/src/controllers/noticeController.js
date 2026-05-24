@@ -77,9 +77,47 @@ const getMyNotices = async (req, res) => {
 };
 
 
+const deleteNotice = async (req, res) => {
+    try {
+
+        // Get notice id from URL params
+        const { id } = req.params;
+
+        // Check if notice exists
+        const checkNotice = await pool.query(
+            `SELECT * FROM notices WHERE id = $1`,
+            [id]
+        );
+
+        if (checkNotice.rows.length === 0) {
+            return res.status(404).json({
+                message: "Notice not found"
+            });
+        }
+
+        // Delete notice
+        await pool.query(
+            `DELETE FROM notices WHERE id = $1`,
+            [id]
+        );
+
+        res.status(200).json({
+            message: "Notice deleted successfully"
+        });
+
+    } catch (err) {
+        console.error("Error deleting notice:", err.message);
+
+        res.status(500).json({
+            message: "Server error while deleting notice"
+        });
+    }
+};
+
 
 module.exports = {
     getNotices,
     createNotice,
-    getMyNotices
+    getMyNotices,
+    deleteNotice
 };
