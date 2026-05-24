@@ -5,11 +5,18 @@ const getNotices = async (req, res) => {
     try {
         // We use a JOIN to grab the actual name of the user who posted it
         const query = `
-            SELECT n.id, n.title, n.content, n.target_audience, n.created_at, u.name as author_name 
-            FROM notices n
-            LEFT JOIN users u ON n.posted_by = u.id
-            ORDER BY n.created_at DESC
-        `;
+    SELECT 
+        n.id,
+        n.title,
+        n.content,
+        n.target_audience,
+        n.created_at,
+        u.name AS author_name
+    FROM notices n
+    LEFT JOIN users u ON n.posted_by = u.id
+    WHERE n.created_at >= CURRENT_DATE - INTERVAL '30 days'
+    ORDER BY n.created_at DESC
+`;
         const result = await pool.query(query);
         
         res.status(200).json({ notices: result.rows });
