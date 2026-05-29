@@ -81,7 +81,7 @@ const getClassRoster = async (req, res) => {
                 u.name,
                 u.email
             FROM users u
-            JOIN enrollments e ON u.id = e.student_id
+            JOIN Enrolments e ON u.id = e.student_id
             WHERE e.class_id = $1 AND u.role = 'STUDENT'
             ORDER BY u.name ASC;
         `;
@@ -113,7 +113,7 @@ const getAttendance = async (req, res) => {
                 u.institutional_id,
                 COALESCE(a.status, 'Not Marked') as status
             FROM users u
-            JOIN enrollments e ON u.id = e.student_id
+            JOIN Enrolments e ON u.id = e.student_id
             LEFT JOIN attendance a ON u.id = a.student_id AND a.class_id = $1 AND a.date = $2
             WHERE e.class_id = $1 AND u.role = 'STUDENT'
             ORDER BY u.name ASC;

@@ -4,26 +4,21 @@ const pool = require('../config/db');
 
 
 // POST /api/auth/login
-async function login(req, res){
+async function login(req, res) {
     const { identifier, password } = req.body;
-       
     try {
-
 
         /// Check BOTH columns in PostgreSQL
         const userResult = await pool.query(
-            'SELECT * FROM users WHERE email = $1 OR institutional_id = $1', 
+            'SELECT * FROM users WHERE email = $1 OR institutional_id = $1',
             [identifier]
         );
 
-        
         const user = userResult.rows[0];
-        
-        
 
         // 2. Validate password
         const validPassword = await bcrypt.compare(password, user.password_hash);
-    
+
         if (!validPassword) {
             return res.status(401).json({ message: 'Invalid Credentials' });
         }
@@ -36,20 +31,19 @@ async function login(req, res){
             name: user.name,
             institutional_id: user.institutional_id
         };
-        
+
 
         // 4. Sign Token (Ensure JWT_SECRET is in your .env)
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
 
-          // 2. Set the cookie
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-            sameSite: 'Strict', // Adjust as needed (Lax or None if cross-site)
-            maxAge: 8 * 60 * 60 * 1000 // 8 hours
+            secure: false, // MUST be false for localhost development (no https)
+            sameSite: 'Lax', // 'Lax' allows cross-port cookies on localhost to work perfectly
+            maxAge: 8 * 60 * 60 * 1000
         });
-    
-        return  res.json({ token, user: payload , message: "Logged in"});
+
+        return res.json({ token, user: payload, message: "Logged in" });
     } catch (err) {
         console.error('Login error:', err.message);
         res.status(500).json({ message: 'Server Error' });
@@ -57,9 +51,9 @@ async function login(req, res){
 };
 
 
- async function changePassword(req, res){
+async function changePassword(req, res) {
     const { userId, newPassword } = req.body; // Later, userId will come from the JWT token
- 
+
     try {
         const salt = await bcrypt.genSalt(10);
         const newPasswordHash = await bcrypt.hash(newPassword, salt);
@@ -70,10 +64,10 @@ async function login(req, res){
             [newPasswordHash, userId]
         );
 
-        if(result.rowCount ===0){
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 message: 'Update faild: User not found'
-            })        
+            })
         }
 
         res.json({ message: 'Password updated successfully. You can now access your dashboard.' });

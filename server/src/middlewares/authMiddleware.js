@@ -1,23 +1,29 @@
+
 const jwt = require('jsonwebtoken');
 
 const verifyToken = (req, res, next) => {
-    // 1. Grab the token from the React request headers
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1]; // Extracts the token after "Bearer"
+    // 1. Grab the token from the cookie
+    const token = req.cookies?.token; 
 
-    if (!token) return res.status(401).json({ message: 'Access Denied: No Token Provided!' });
+    if (!token) {
+        // We use 'success: false' here so your frontend Axios interceptors can catch it easily
+        return res.status(401).json({ success: false, message: "Access Denied: No token provided in cookies!" });
+    }
 
     try {
-        // 2. Open the token using your secret key
+        // 2. Decode the token
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         
-        // 3. Attach the user's data (id, role, name) to the request!
+        // 3. THE CRUCIAL HANDOFF: Attach the decoded payload to the request
+        // This is what checkRole is looking for!
         req.user = verified; 
         
-        // 4. Send them to the controller
-        next();
-    } catch (err) {
-        res.status(403).json({ message: 'Invalid or Expired Token' });
+        // 4. THE GREEN LIGHT: Tell Express to move to the next middleware (checkRole)
+        next(); 
+        
+    } catch (error) {
+        console.error("JWT Verification Error:", error.message);
+        return res.status(403).json({ success: false, message: "Invalid or expired session." });
     }
 };
 // The New Role Checker
@@ -27,6 +33,7 @@ const checkRole = (allowedRoles) => {
         if (!req.user || !req.user.role) {
             return res.status(401).json({ success: false, message: "Authentication required" });
         }
+        
 
         // Check if the user's role is in the array of allowed roles
         if (!allowedRoles.includes(req.user.role)) {

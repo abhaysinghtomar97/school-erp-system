@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { createContext, useState, useEffect } from 'react';
+import API from '../services/api'; // Make sure your Axios instance is imported here
 
 export const AuthContext = createContext();
 
@@ -7,33 +7,36 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // When the app loads, ask the backend if a valid cookie exists
     useEffect(() => {
-        // When the app loads, check if they already have a token
-        const token = localStorage.getItem('token');
-        if (token) {
+        const verifySession = async () => {
             try {
-                const decodedToken = jwtDecode(token);
-                // Check if token is expired
-                if (decodedToken.exp * 1000 < Date.now()) {
-                    logout();
-                } else {
-                    setUser(decodedToken);
-                }
+                // We will create this quick route on the backend in the next step
+                const response = await API.get('/auth/me'); 
+              
+                setUser(response.data.user);
             } catch (err) {
-                logout();
+                // If it fails (no cookie, or expired), they are not logged in
+                setUser(null); 
+            } finally {
+                setLoading(false);
             }
-        }
-        setLoading(false);
+        };
+
+        verifySession();
     }, []);
 
-    const login = (token) => {
-        localStorage.setItem('token', token);
-        const decodedToken = jwtDecode(token);
-        setUser(decodedToken);
+    const login = (userData) => {
+        setUser(userData); // Just update state, no localStorage needed
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
+    const logout = async () => {
+        try {
+            // Tell the backend to destroy the secure cookie
+            await API.post('/auth/logout');
+        } catch (err) {
+            console.error("Logout failed", err);
+        }
         setUser(null);
     };
 

@@ -1,7 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../services/api';
-import { jwtDecode } from 'jwt-decode';
 import { AuthContext } from '../../context/AuthContext';
 
 const Login = () => {
@@ -24,25 +23,23 @@ const Login = () => {
         try {
             // Hit your Node.js backend
             const response = await API.post('/auth/login', formData);
-            const { token, user } = response.data;
-           
-            // Save the token to local storage
-            login(token)
-
-            // Decode the token to find out who just logged in
-            const decodedToken = jwtDecode(token);
-
-            // Role-Based Routing (The Traffic Cop!)
-            if (user.is_first_login) {
-                navigate('/change-password'); // Force them to change password
-            } else if (decodedToken.role === 'ADMIN') {
-                navigate('/admin');
-            } else if (decodedToken.role === 'TEACHER') {
-                console.log("navigating")
-                navigate('/faculty');
-            } else if (decodedToken.role === 'STUDENT') {
-                navigate('/student');
-            }
+            
+            const {  user } = response.data;
+            
+            // Save the user to local storage
+            login(user)
+            
+          
+            //// Role-Based Routing using the backend's user object directly!
+        if (user.is_first_login) {
+            navigate('/change-password');
+        } else if (user.role === 'ADMIN') {
+            navigate('/admin');
+        } else if (user.role === 'TEACHER') {
+            navigate('/faculty');
+        } else if (user.role === 'STUDENT') {
+            navigate('/student');
+        }
 
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please try again.');

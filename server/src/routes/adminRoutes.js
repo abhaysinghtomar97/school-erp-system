@@ -1,11 +1,12 @@
 const express = require('express');
-const {verifyToken }= require('../middlewares/authMiddleware');
+const {verifyToken, checkRole }= require('../middlewares/authMiddleware');
 const adminController = require('../controllers/adminController');
 
 const router = express.Router();
-
+router.use(verifyToken)
+router.use(checkRole(['ADMIN']))
 // Existing Routes
-router.get('/', verifyToken, adminController.getdashboard);
+router.get('/',  adminController.getdashboard);
 router.post('/create-user', adminController.CreateUser);
 router.get('/students', adminController.getStudents);
 router.get('/faculty', adminController.getFaculty);
@@ -13,9 +14,9 @@ router.put('/users/:id/status', adminController.toggleUserStatus);
 router.post('/classes', adminController.createClass);
 router.get('/classes', adminController.getClasses);
 router.get('/classes/:class_id/roster', adminController.getClassRoster);
-router.post('/enrollments', adminController.enrollStudent);
-router.put('/enrollments/archive',verifyToken, adminController.archiveStudentEnrollment);
-router.put('/enrollments/classes/archive', verifyToken, adminController.bulkArchiveClass);
+router.post('/Enrolments', adminController.enrollStudent);
+router.put('/Enrolments/archive',verifyToken, adminController.archiveStudentEnrollment);
+router.put('/Enrolments/classes/archive', verifyToken, adminController.bulkArchiveClass);
 
 // --- TIMETABLE ROUTES ---
 // We are now using your existing verifyToken middleware here

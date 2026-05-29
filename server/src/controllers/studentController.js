@@ -19,7 +19,7 @@ const getMyTimetable = async (req, res) => {
             JOIN periods p ON t.period_id = p.id
             JOIN subjects s ON t.subject_id = s.id
             JOIN users u ON t.teacher_id = u.id
-            JOIN enrollments e ON t.class_id = e.class_id
+            JOIN Enrolments e ON t.class_id = e.class_id
             WHERE e.student_id = $1
             ORDER BY 
                 CASE t.day_of_week
@@ -96,7 +96,7 @@ const getMyAssignmentsAndGrades = async (req, res) => {
                 g.feedback, 
                 g.graded_at
             FROM assignments a
-            JOIN enrollments e ON a.class_id = e.class_id
+            JOIN Enrolments e ON a.class_id = e.class_id
             JOIN subjects s ON a.subject_id = s.id
             JOIN users u ON a.teacher_id = u.id
             LEFT JOIN grades g ON a.id = g.assignment_id AND g.student_id = $1
@@ -126,7 +126,7 @@ const getData = async(req, res)=>{
                 u.mobile_number,
                 c.name AS class_name
             FROM users u
-            JOIN enrollments e ON u.id = e.student_id
+            JOIN Enrolments e ON u.id = e.student_id
             JOIN classes c ON e.class_id = c.id
             WHERE u.id = $1;
         `;

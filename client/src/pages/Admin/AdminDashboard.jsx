@@ -4,7 +4,7 @@ import API from '../../services/api';
 
 const AdminDashboard = () => {
     const { user } = useContext(AuthContext);
-
+   
 
     // --- State ---
     const [stats, setStats] = useState({ students: 0, faculty: 0, classes: 0 });
@@ -22,7 +22,8 @@ const AdminDashboard = () => {
         try {
             // Make ONE call to your new, efficient endpoint
             const response = await API.get('/admin');
-
+        
+            
 
             // PostgreSQL COUNT() returns strings, so we parse them into numbers
             setStats({

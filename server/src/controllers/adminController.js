@@ -297,7 +297,7 @@ const getClassRoster = async (req, res) => {
         const result = await pool.query(`
             SELECT users.id, users.name, users.institutional_id, users.email 
             FROM users 
-            JOIN enrollments e ON users.id = e.student_id 
+            JOIN Enrolments e ON users.id = e.student_id 
             WHERE e.class_id = $1 AND e.is_active = true
             ORDER BY users.name ASC
         `, [class_id]);
@@ -315,7 +315,7 @@ const enrollStudent = async (req, res) => {
 
     try {
         await pool.query(
-            `INSERT INTO enrollments (student_id, class_id, academic_year, is_active) 
+            `INSERT INTO Enrolments (student_id, class_id, academic_year, is_active) 
              VALUES ($1, $2, $3, true)`,
             [student_id, class_id, dynamicAcademicYear]
         );
@@ -340,7 +340,7 @@ const archiveStudentEnrollment = async (req, res) => {
 
     try {
         const result = await pool.query(
-            `UPDATE enrollments 
+            `UPDATE Enrolments 
              SET is_active = false 
              WHERE student_id = $1 AND academic_year = $2 AND is_active = true
              RETURNING *`,
@@ -374,14 +374,14 @@ const bulkArchiveClass = async (req, res) => {
 
     try {
         const result = await pool.query(
-            `UPDATE enrollments 
+            `UPDATE Enrolments 
              SET is_active = false 
              WHERE class_id = $1 AND academic_year = $2 AND is_active = true`,
             [class_id, academic_year]
         );
 
         res.status(200).json({
-            message: `Successfully archived ${result.rowCount} student enrollments for the class.`
+            message: `Successfully archived ${result.rowCount} student Enrolments for the class.`
         });
 
     } catch (err) {
@@ -393,7 +393,6 @@ const bulkArchiveClass = async (req, res) => {
 
 // --- TIMETABLE MANAGEMENT ---
 
-// 1. Get all time slots
 const getAllPeriods = async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM periods ORDER BY start_time ASC");
@@ -403,7 +402,6 @@ const getAllPeriods = async (req, res) => {
     }
 };
 
-// 2. Fetch formatted timetable for a specific class
 const getClassTimetable = async (req, res) => {
     const { classId } = req.params;
     try {
@@ -435,7 +433,6 @@ const getClassTimetable = async (req, res) => {
     }
 };
 
-// 3. Assign or update a slot
 const assignTimetableSlot = async (req, res) => {
     const { day, periodId, classId, subjectId, teacherId } = req.body;
     try {
@@ -455,7 +452,7 @@ const assignTimetableSlot = async (req, res) => {
     }
 };
 
-// --- SUBJECTS MANAGEMENT ---
+//  SUBJECTS MANAGEMENT
 
 const getSubjectsByClass = async (req, res) => {
     const { classId } = req.params;
@@ -476,7 +473,7 @@ const getSubjectsByClass = async (req, res) => {
     }
 };
 
-// --- ATTENDANCE MANAGEMENT ---
+// ATTENDANCE MANAGEMENT 
 
 const getStudentAttendanceLogs = async (req, res) => {
     const { date, classId } = req.query; // Using query params for filters
@@ -565,9 +562,9 @@ const markFacultyAttendance = async (req, res) => {
     }
 };
 
-// ------ Subjects CRUD 
+// SUBJECTS MANAGEMENT
 
-// 1. Get all subjects with Teacher and Class names
+
 
 const getSubjects = async (req, res) => {
     try {
@@ -590,7 +587,7 @@ const getSubjects = async (req, res) => {
         res.status(500).json({ success: false, message: "Database query failed" });
     }
 };
-// 2. Add a new subject
+
 const createSubject = async (req, res) => {
     const { name, code, teacher_id, class_id } = req.body;
 
@@ -613,7 +610,6 @@ const createSubject = async (req, res) => {
     }
 };
 
-// 3. Delete a subject
 const deleteSubject = async (req, res) => {
     const { id } = req.params;
     try {
@@ -624,6 +620,7 @@ const deleteSubject = async (req, res) => {
     }
 };
 
+//FEE MANAGEMENT
 
 module.exports = {
     CreateUser,
