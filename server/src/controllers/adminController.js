@@ -191,7 +191,7 @@ const getStudents = async (req, res) => {
                 u.is_active,
                 c.name AS current_class
             FROM users u
-            LEFT JOIN enrollments e ON u.id = e.student_id AND e.is_active = true
+            LEFT JOIN enrolments e ON u.id = e.student_id AND e.is_active = true
             LEFT JOIN classes c ON e.class_id = c.id
             WHERE u.role = 'STUDENT'
             ORDER BY u.institutional_id ASC
