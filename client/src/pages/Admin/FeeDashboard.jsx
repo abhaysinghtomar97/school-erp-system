@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 import API from '../../services/api';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import TableSkeleton from '../../components/TableSkeleton';
+
 
 export default function FeeDashboard() {
   const navigate = useNavigate();
@@ -249,16 +250,30 @@ export default function FeeDashboard() {
                 students.map((student) => (
                   <tr key={student.student_id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <td className="p-4 text-sm text-gray-600">{student.institutional_id}</td>
-                    <td className="p-4 text-sm font-medium text-gray-800">{student.name}</td>
-                  <td className="p-4 text-sm font-medium">
-    {student.last_billed_month ? (
-      <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 text-xs">
-        {student.last_billed_month}
-      </span>
-    ) : (
-      <span className="text-gray-400 italic text-xs">Not Billed</span>
-    )}
-  </td>
+                    <td className="p-4 text-sm font-medium relative group">
+
+                      <Link
+                        to={`/admin/user/${student.student_id}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                      >
+                        {student.name}
+                      </Link>
+
+                      {/* 2. The Custom Tooltip */}
+                      <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-sm whitespace-nowrap z-10">
+                        Open Profile
+                      </span>
+
+                    </td>
+                    <td className="p-4 text-sm font-medium">
+                      {student.last_billed_month ? (
+                        <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100 text-xs">
+                          {student.last_billed_month}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 italic text-xs">Not Billed</span>
+                      )}
+                    </td>
 
                     <td className="p-4 text-sm font-bold text-red-600">
                       {parseFloat(student.current_due) > 0 ? student.current_due : '0.00'}

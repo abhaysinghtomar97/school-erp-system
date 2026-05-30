@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
+import { Link } from 'react-router-dom';
 
 // Helper function to calculate the dynamic academic year on the frontend
 const getCurrentAcademicYear = () => {
@@ -82,7 +83,7 @@ const ManageEnrolments = () => {
                 student_id: selectedStudent
             });
             setMessage({ type: 'success', text: 'Student added successfully!' });
-            setSelectedStudent(''); 
+            setSelectedStudent('');
             fetchRoster(selectedClass);
             fetchInitialData(); // Refresh students to update the dropdown filter
         } catch (err) {
@@ -95,16 +96,16 @@ const ManageEnrolments = () => {
     // 4. Handle Individual Student Archiving (Promotion/Transfer)
     const handleArchiveStudent = async (studentId) => {
         if (!window.confirm("Are you sure you want to archive this student's enrolment?")) return;
-        
+
         setProcessingAction(true);
         setMessage({ type: '', text: '' });
-        
+
         try {
             const academic_year = getCurrentAcademicYear();
             // Ensure this PUT route matches your Express backend router for archiveStudentenrolment
-            await API.put('/admin/Enrolments/archive', { 
-                student_id: studentId, 
-                academic_year 
+            await API.put('/admin/Enrolments/archive', {
+                student_id: studentId,
+                academic_year
             });
             setMessage({ type: 'success', text: 'Student archived successfully.' });
             fetchRoster(selectedClass);
@@ -119,16 +120,16 @@ const ManageEnrolments = () => {
     // 5. Handle Bulk Class Archiving (End of Year)
     const handleBulkArchive = async () => {
         if (!window.confirm("WARNING: This will archive all active Enrolments for this class. Proceed with End of Year promotion?")) return;
-        
+
         setProcessingAction(true);
         setMessage({ type: '', text: '' });
 
         try {
             const academic_year = getCurrentAcademicYear();
             // Ensure this PUT route matches your Express backend router for bulkArchiveClass
-            await API.put('/admin/Enrolments/classes/archive', { 
-                class_id: selectedClass, 
-                academic_year 
+            await API.put('/admin/Enrolments/classes/archive', {
+                class_id: selectedClass,
+                academic_year
             });
             setMessage({ type: 'success', text: 'Class archived successfully! All students removed from active roster.' });
             fetchRoster(selectedClass);
@@ -224,7 +225,7 @@ const ManageEnrolments = () => {
                                             {roster.length} Enrolled
                                         </span>
                                         {roster.length > 0 && (
-                                            <button 
+                                            <button
                                                 onClick={handleBulkArchive}
                                                 disabled={processingAction}
                                                 className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-3 py-1 rounded transition disabled:opacity-50"
@@ -254,9 +255,23 @@ const ManageEnrolments = () => {
                                                 roster.map((student) => (
                                                     <tr key={student.id} className="hover:bg-gray-50 transition-colors">
                                                         <td className="px-6 py-4 font-mono font-medium text-gray-900">{student.institutional_id}</td>
-                                                        <td className="px-6 py-4 font-medium text-gray-800">{student.name}</td>
+                                                        <td className="p-4 text-sm font-medium relative group">
+
+                                                            <Link
+                                                                to={`/admin/user/${student.id}`}
+                                                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                                            >
+                                                                {student.name}
+                                                            </Link>
+
+                                                            {/* 2. The Custom Tooltip */}
+                                                            <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-sm whitespace-nowrap z-10">
+                                                                Open Profile
+                                                            </span>
+
+                                                        </td>
                                                         <td className="px-6 py-4 text-right">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleArchiveStudent(student.id)}
                                                                 disabled={processingAction}
                                                                 className="text-red-500 hover:text-red-700 font-medium text-sm disabled:opacity-50"

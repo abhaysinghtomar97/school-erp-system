@@ -19,14 +19,14 @@ const assignment = <svg className="size-6" viewBox="0 0 24 24" xmlns="http://www
     <path fill="#494c4e" d="M20 13c0 .55-.45 1-1 1h-8.01c-.55-.01-.99-.45-.99-1s.44-.99.99-1H19c.55 0 1 .45 1 1zM20 19c0 .55-.45 1-1 1h-8.01c-.55-.01-.99-.45-.99-1s.44-.99.99-1H19c.55 0 1 .45 1 1z" />
     <path fill="#494c4e" d="M22 0H2C.9 0 0 .9 0 2v20c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2zm0 21.5c0 .276-.224.5-.5.5h-19c-.276 0-.5-.224-.5-.5v-19c0-.276.224-.5.5-.5h19c.276 0 .5.224.5.5v19z" />
 </svg>
-const fee_module =<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hand-coins-icon lucide-hand-coins">
-    <path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/>
-    <path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/>
-    <path d="m2 16 6 6"/>
-    <circle cx="16" cy="9" r="2.9"/>
-    <circle cx="6" cy="5" r="3"/></svg>
-const Transport =<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bus-icon lucide-bus"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>
-       
+const fee_module = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-hand-coins-icon lucide-hand-coins">
+    <path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" />
+    <path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+    <path d="m2 16 6 6" />
+    <circle cx="16" cy="9" r="2.9" />
+    <circle cx="6" cy="5" r="3" /></svg>
+const Transport = <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-bus-icon lucide-bus"><path d="M8 6v6" /><path d="M15 6v6" /><path d="M2 12h19.6" /><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3" /><circle cx="7" cy="18" r="2" /><path d="M9 18h5" /><circle cx="16" cy="18" r="2" /></svg>
+
 
 export const adminLinks = [
     {
@@ -44,15 +44,15 @@ export const adminLinks = [
         </svg>
     },
     {
-        name: 'Fee Module', path: '/admin/fee_module', icon:fee_module
+        name: 'Fee Module', path: '/admin/fee_module', icon: fee_module
     },
     {
         name: 'Transportation ',
-        path:'/admin/transportation-manage',
-        icon:Transport
+        path: '/admin/transportation-manage',
+        icon: Transport
 
     },
-    
+
 
     {
         name: 'Manage Students', path: '/admin/students', icon: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
