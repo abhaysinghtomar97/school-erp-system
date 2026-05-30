@@ -8,6 +8,7 @@ const noticeRoutes = require('./routes/noticeRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const userRoutes = require('./routes/userRoutes.js')
 const feeRoutes = require('./routes/feeRoutes');
+const transport = require('./routes/transportRoutes.js')
 require('./services/cronServices.js');
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/api/faculty', facultyRoutes);
 app.use('/api', noticeRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/users', userRoutes );
+app.use('/api/transport', transport );
 
 
 

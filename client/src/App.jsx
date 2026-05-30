@@ -35,6 +35,7 @@ import InvoiceManager from './pages/Admin/InvoiceManager';
 import FeeSettings from './pages/Admin/FeeSettings';
 import FeeHistory from './pages/Admin/FeeHistory';
 import UserProfile from './pages/Admin/UserProfile';
+import TransportAllocation from './pages/Admin/TransportAllocation';
 
 
 
@@ -79,6 +80,7 @@ function App() {
             <Route path="fee_settings" element={<FeeSettings />} />
             <Route path="/admin/fee-history" element={<FeeHistory />} />
             <Route path="/admin/user/:id" element={<UserProfile />} />
+            <Route path="/admin/transportation-Manage" element={<TransportAllocation />} />
           </Route>
 
           {/* 🔒 NESTED FACULTY ROUTES 🔒 */}

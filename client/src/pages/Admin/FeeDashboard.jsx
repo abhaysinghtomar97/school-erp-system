@@ -159,10 +159,14 @@ export default function FeeDashboard() {
     <div className="p-6 max-w-7xl mx-auto font-sans bg-gray-50 min-h-screen">
 
       {/* Header Area */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold text-gray-800">Fee Management</h1>
 
+        </div>
+
+        {/* Action Buttons Container (Your existing buttons) */}
+        <div className="grid grid-cols-2 gap-2 mt-4">
           {/* NEW HELP BUTTON */}
           <button
             onClick={() => setHelpModalOpen(true)}
@@ -170,10 +174,6 @@ export default function FeeDashboard() {
           >
             <span>❓</span> How it works
           </button>
-        </div>
-
-        {/* Action Buttons Container (Your existing buttons) */}
-        <div className="flex gap-4">
           {/* 3. The New Settings Button */}
           <button
             onClick={() => navigate('/admin/fee_settings')}
