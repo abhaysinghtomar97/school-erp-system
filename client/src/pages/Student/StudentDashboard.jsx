@@ -3,10 +3,12 @@ import TodayClassesWidget from './TodaysClassesWidget';
 import AttendanceSummaryWidget from './AttendanceSummaryWidget';
 import API from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
+import DashboardSkeleton from '../../components/DashboardSkeleton';
 
 const StudentDashboard = () => {
 
     // fetch student data from /api/student/data api 
+    const [loading, setLoading] = useState(true);
     const [studentData, setStudentData] = useState({
         name: "",
         email: "",
@@ -16,6 +18,7 @@ const StudentDashboard = () => {
     useEffect(() => {
         const fetchStudentData = async () => {
             try {
+                setLoading(true);
                 const user = await API.get('/student/data');
 
 
@@ -26,6 +29,8 @@ const StudentDashboard = () => {
 
             } catch (error) {
                 console.error("Error fetching student data:", error);
+            } finally{
+                setLoading(false);
             }
         };
         fetchStudentData();
@@ -35,7 +40,9 @@ const StudentDashboard = () => {
     }, [studentData])
 
 
-
+    if(loading) {
+        return <DashboardSkeleton />
+    }
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-10">

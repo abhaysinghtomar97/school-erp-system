@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import API from '../../services/api'; 
+import DashboardSkeleton from '../../components/DashboardSkeleton';
 
 const FacultyDashboard = () => {
     const { user } = useContext(AuthContext);
+    const [loading , setLoading] = useState(true);
 
     // --- State ---
     const [schedule, setSchedule] = useState({});
-    const [loading, setLoading] = useState(true);
     
     // Roster Modal State
     const [roster, setRoster] = useState([]);
@@ -131,6 +132,9 @@ const FacultyDashboard = () => {
         if (!timeStr) return '';
         return timeStr.substring(0, 5); 
     };
+        if(loading){
+            return <DashboardSkeleton />
+        }
 
     return (
         <div className="max-w-6xl mx-auto font-sans text-gray-800 space-y-6">

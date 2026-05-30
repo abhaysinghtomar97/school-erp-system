@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import API from '../../services/api';
+import DashboardSkeleton from '../../components/DashboardSkeleton';
+
 
 const AdminDashboard = () => {
     const { user } = useContext(AuthContext);
-   
+    const [loading, setLoading] = useState(true);
+
 
     // --- State ---
     const [stats, setStats] = useState({ students: 0, faculty: 0, classes: 0 });
@@ -20,10 +23,12 @@ const AdminDashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
+
+            setLoading(true);
             // Make ONE call to your new, efficient endpoint
             const response = await API.get('/admin');
-        
-            
+
+
 
             // PostgreSQL COUNT() returns strings, so we parse them into numbers
             setStats({
@@ -39,6 +44,8 @@ const AdminDashboard = () => {
 
         } catch (error) {
             console.error("Error loading dashboard data", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -76,6 +83,9 @@ const AdminDashboard = () => {
             console.error("Error deleting notice:", error);
         }
     };
+    if (loading) {
+        return <DashboardSkeleton />;
+    }
 
     return (
         <div className="max-w-5xl mx-auto font-sans text-gray-800 space-y-6">
@@ -245,7 +255,7 @@ const AdminDashboard = () => {
                                                             translate-x-[-100%]
                                                             group-hover:translate-x-[100%]
                                                             transition-transform duration-700">
-                                                                                              
+
                                             </span>
 
                                             <span className="relative z-10 flex items-center gap-2">
