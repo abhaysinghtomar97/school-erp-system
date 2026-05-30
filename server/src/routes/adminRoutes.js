@@ -15,7 +15,7 @@ router.post('/classes', adminController.createClass);
 router.get('/classes', adminController.getClasses);
 router.get('/classes/:class_id/roster', adminController.getClassRoster);
 router.post('/Enrolments', adminController.enrollStudent);
-router.put('/Enrolments/archive',verifyToken, adminController.archiveStudentEnrollment);
+router.put('/Enrolments/archive',verifyToken, adminController.archiveStudentenrolment);
 router.put('/Enrolments/classes/archive', verifyToken, adminController.bulkArchiveClass);
 
 // --- TIMETABLE ROUTES ---

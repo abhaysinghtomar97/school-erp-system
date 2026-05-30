@@ -18,7 +18,7 @@ import StudentDashboard from './pages/Student/StudentDashboard';
 import ManageStudents from './pages/Admin/ManageStudents';
 import ManageFaculty from './pages/Admin/ManageFaculty';
 import ManageClasses from './pages/Admin/ManageClasses';
-import ManageEnrollments from './pages/Admin/ManageEnrollments';
+import ManageEnrolments from './pages/Admin/ManageEnrolments';
 import CreateUser from './pages/Admin/CreateUser';
 import ManageTimetable from './pages/Admin/ManageTimetable';
 import FacultyAttendance from './pages/Faculty/FacultyAttandance';
@@ -30,6 +30,10 @@ import StudentAssignments from './pages/Student/StudentAssignment';
 import RecentAnnouncements from './components/wedget/RecentAnnouncements';
 import AutoTitle from './components/AutoTitle';
 import ManageSubjects from './pages/Admin/ManageSubjects';
+import FeeDashboard from './pages/Admin/FeeDashboard';
+import InvoiceManager from './pages/Admin/InvoiceManager';
+import FeeSettings from './pages/Admin/FeeSettings';
+import FeeHistory from './pages/Admin/FeeHistory';
 
 
 
@@ -65,10 +69,14 @@ function App() {
             <Route path="students" element={<ManageStudents />} />
             <Route path="faculty" element={<ManageFaculty />} />
             <Route path="classes" element={<ManageClasses />} />
-            <Route path="enrollments" element={<ManageEnrollments />} />
+            <Route path="enrolments" element={<ManageEnrolments />} />
             <Route path="timetable" element={<ManageTimetable/>} />
             <Route path="attendance" element={<ManageAttendance/>} />
             <Route path="subjects" element={<ManageSubjects />} />
+            <Route path="Fee_module" element={<FeeDashboard />} />
+            <Route path="create_invoice" element={<InvoiceManager/>} />
+            <Route path="fee_settings" element={<FeeSettings />} />
+            <Route path="/admin/fee-history" element={<FeeHistory />} />
 
           </Route>
 

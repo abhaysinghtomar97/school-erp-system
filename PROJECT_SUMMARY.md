@@ -2,10 +2,10 @@
 
 ## 1. Project Overview
 
-- This is a full-stack School ERP (Enterprise Resource Planning) system with an admin-managed user and class enrollment workflow.
+- This is a full-stack School ERP (Enterprise Resource Planning) system with an admin-managed user and class enrolment workflow.
 - The application provides role-based access for Admin, Faculty, and Student users.
 - Target users appear to be educational institution administrators, teachers, and students.
-- The backend is responsible for authentication, user provisioning, class creation, enrollment, and faculty class retrieval.
+- The backend is responsible for authentication, user provisioning, class creation, enrolment, and faculty class retrieval.
 - The frontend is a React/Vite application that supports login, forced first-login password change, admin dashboards, faculty dashboard, and a placeholder student dashboard.
 
 ## 2. Tech Stack
@@ -55,7 +55,7 @@
 - Admin route to toggle user active status.
 - Admin class creation and class listing.
 - Admin class roster retrieval for a specific class.
-- Admin student enrollment into classes.
+- Admin student enrolment into classes.
 - Faculty route to fetch classes assigned to the logged-in faculty member.
 - Frontend protected routing by role: Admin, Teacher, Student.
 - Frontend dashboards for admin and faculty.
@@ -99,7 +99,7 @@
 - `GET /api/admin/classes/:class_id/roster`
   - Retrieves enrolled students for a specific class.
 
-- `POST /api/admin/enrollments`
+- `POST /api/admin/enrolments`
   - Enrolls a student into a class using `student_id` and `class_id`.
 
 - `GET /api/faculty/my-classes`
@@ -113,7 +113,7 @@
 - `/admin/students` - admin student management.
 - `/admin/faculty` - admin faculty listing.
 - `/admin/classes` - admin class management.
-- `/admin/enrollments` - admin enrollment management.
+- `/admin/enrolments` - admin enrolment management.
 - `/faculty` - teacher dashboard.
 - `/student` - student dashboard placeholder.
 
@@ -141,14 +141,14 @@ No explicit ORM models or schema files are included. The database schema is infe
   - `homeroom_teacher_id` (foreign key to `users.id`)
   - `created_at`
 
-- `enrollments`
+- `enrolments`
   - `student_id` (foreign key to `users.id`)
   - `class_id` (foreign key to `classes.id`)
 
 ### Relationships
 
 - A class may have one homeroom teacher (`classes.homeroom_teacher_id -> users.id`).
-- Students are enrolled in classes through the `enrollments` join table.
+- Students are enrolled in classes through the `enrolments` join table.
 - There is no explicit student-specific relationship route; student data is inferred from the `users` table.
 
 ## 7. Authentication & Authorization
@@ -173,7 +173,7 @@ No explicit ORM models or schema files are included. The database schema is infe
 ### Completed
 
 - Backend authentication and user creation flows.
-- Admin management pages for users, faculty, classes, and enrollments.
+- Admin management pages for users, faculty, classes, and enrolments.
 - Faculty class retrieval route and dashboard.
 - JWT-based route protection on frontend.
 - Email notification via Gmail/Nodemailer for new accounts.
@@ -190,7 +190,7 @@ No explicit ORM models or schema files are included. The database schema is infe
 - Password-change route protection using JWT middleware.
 - Admin user editing or deletion.
 - Class editing and deletion.
-- Enrollment removal / student un-enrollment.
+- enrolment removal / student un-enrolment.
 - Better error handling and consistency in frontend API response parsing.
 - Explicit database schema migration or model definitions.
 - A bootstrap admin user creation flow or seed data script.
@@ -230,7 +230,7 @@ No explicit ORM models or schema files are included. The database schema is infe
 - `client/src/context/AuthContext.jsx` imports `jwtDecode` as a named import; the package typically exports a default function, which may cause runtime issues.
 - `server/src/routes/authRoutes.js` leaves `change-password` unprotected, but the frontend relies on JWT for user identity.
 - Root `readme.md` includes folder references (`hooks/`, `layouts/`, `routes/`) that are not present in the actual codebase.
-- `ManageEnrollments` assumes inconsistent response shape from `/admin/students` and contains defensive parsing for multiple property names.
+- `ManageEnrolments` assumes inconsistent response shape from `/admin/students` and contains defensive parsing for multiple property names.
 - There is no central model/schema directory or migration scripts; database structure must be inferred from SQL queries.
 - Admin route `create-user` uses a temporary password, but there is no explicit policy for password reset expiration.
 - Student role lacks backend-specific features and routes.

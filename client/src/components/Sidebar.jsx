@@ -3,11 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 // Notice 'navLinks' is now included in the destructured props
-const Sidebar = ({ 
-    isMobileSidebarOpen, 
-    setIsMobileSidebarOpen, 
+const Sidebar = ({
+    isMobileSidebarOpen,
+    setIsMobileSidebarOpen,
     isDesktopSidebarExpanded,
-    navLinks 
+    navLinks
 }) => {
     const { user } = useContext(AuthContext);
     const location = useLocation();
@@ -22,7 +22,7 @@ const Sidebar = ({
             w-[50%] ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             md:translate-x-0 ${sidebarWidth}
         `}>
-            
+
             {/* Profile Section */}
             <div className={`p-5 flex flex-col items-center border-b bg-blue-50 ${!isDesktopSidebarExpanded ? 'md:p-3' : ''}`}>
                 <div className={`
@@ -41,15 +41,15 @@ const Sidebar = ({
                     </p>
                 </div>
             </div>
-            
+
             {/* Nav */}
             <nav className="flex-1 overflow-y-auto py-3">
                 <ul className="space-y-1">
                     {/* Added a fallback (navLinks || []) just in case it loads before links are passed */}
                     {(navLinks || []).map((link, i) => {
                         // More robust active checking
-                        const isActive = link.path === location.pathname || 
-                                         (link.path !== '/' && location.pathname.startsWith(link.path) && link.path.split('/').length > 1);
+                        const isActive = link.path === location.pathname ||
+                            (link.path !== '/' && location.pathname.startsWith(link.path) && link.path.split('/').length > 1);
 
                         return (
                             <li key={i}>

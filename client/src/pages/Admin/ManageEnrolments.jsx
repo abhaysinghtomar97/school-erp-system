@@ -68,7 +68,7 @@ const ManageEnrolments = () => {
         }
     };
 
-    // 3. Handle the actual enrollment submission
+    // 3. Handle the actual enrolment submission
     const handleEnroll = async (e) => {
         e.preventDefault();
         if (!selectedClass || !selectedStudent) return;
@@ -94,14 +94,14 @@ const ManageEnrolments = () => {
 
     // 4. Handle Individual Student Archiving (Promotion/Transfer)
     const handleArchiveStudent = async (studentId) => {
-        if (!window.confirm("Are you sure you want to archive this student's enrollment?")) return;
+        if (!window.confirm("Are you sure you want to archive this student's enrolment?")) return;
         
         setProcessingAction(true);
         setMessage({ type: '', text: '' });
         
         try {
             const academic_year = getCurrentAcademicYear();
-            // Ensure this PUT route matches your Express backend router for archiveStudentEnrollment
+            // Ensure this PUT route matches your Express backend router for archiveStudentenrolment
             await API.put('/admin/Enrolments/archive', { 
                 student_id: studentId, 
                 academic_year 
@@ -153,7 +153,7 @@ const ManageEnrolments = () => {
             ) : (
                 <div className="flex flex-col lg:flex-row gap-8">
 
-                    {/* LEFT SIDE: Selection & Enrollment Form */}
+                    {/* LEFT SIDE: Selection & enrolment Form */}
                     <div className="lg:w-1/3 flex flex-col gap-6">
 
                         {/* Step 1: Pick a Class */}
