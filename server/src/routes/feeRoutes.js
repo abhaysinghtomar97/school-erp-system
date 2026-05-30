@@ -24,4 +24,9 @@ router.post('/structures', verifyToken, checkRole(['ADMIN']), feeController.crea
 // 5. Get recent payment history
 router.get('/history', verifyToken, checkRole(['ADMIN']), feeController.getFeeHistory);
 
+// Add this with your other fee routes
+router.get('/student/:studentId/ledger', verifyToken, checkRole(['ADMIN']), feeController.getStudentFeeLedger);
+
+router.post('/pay-month', verifyToken, checkRole(['ADMIN']), feeController.payMonthDues);
+
 module.exports = router;

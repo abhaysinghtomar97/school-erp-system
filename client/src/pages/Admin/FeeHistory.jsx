@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import  API from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+
 
 
 const HistorySkeleton = ({ rows }) => {
@@ -23,7 +25,7 @@ const HistorySkeleton = ({ rows }) => {
 const FeeHistory = () => {
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+  const navigate = useNavigate(null);
   // DataTable Controls
   const [searchTerm, setSearchTerm] = useState('');
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -81,7 +83,7 @@ const FeeHistory = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Fee Transaction History</h1>
-
+        <button onClick={() => navigate('/admin/fee_module')}> Back </button>
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         
         {/* Header Bar (Styled like image_5bf85f.png) */}

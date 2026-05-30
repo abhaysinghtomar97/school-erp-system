@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
+import { Link } from 'react-router-dom';
+
 
 const ManageFaculty = () => {
     // --- Data State ---
@@ -36,7 +38,7 @@ const ManageFaculty = () => {
     };
 
     // --- Client-Side Search & Pagination Logic ---
-    const filteredFaculty = faculty.filter(teacher => 
+    const filteredFaculty = faculty.filter(teacher =>
         teacher.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         teacher.institutional_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         teacher.email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -53,7 +55,7 @@ const ManageFaculty = () => {
         const headers = ['Faculty ID', 'Name', 'Email'];
         const rows = filteredFaculty.map(f => `${f.institutional_id}\t${f.name}\t${f.email}`);
         const textToCopy = [headers.join('\t'), ...rows].join('\n');
-        
+
         navigator.clipboard.writeText(textToCopy)
             .then(() => alert("Faculty data copied to clipboard!"))
             .catch(() => alert("Failed to copy data."));
@@ -63,7 +65,7 @@ const ManageFaculty = () => {
         const headers = ['Faculty ID,Name,Email'];
         const rows = filteredFaculty.map(f => `"${f.institutional_id}","${f.name}","${f.email}"`);
         const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join('\n');
-        
+
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -83,7 +85,7 @@ const ManageFaculty = () => {
 
     return (
         <div className="p-6 font-sans text-gray-700 bg-[#f8f9fa] min-h-screen print:p-0 print:bg-white">
-            
+
             {/* Page Title - HIDDEN ON PRINT */}
             <div className="mb-6 print:hidden">
                 <div className="text-sm text-gray-500 mb-1">Home / Manage Faculty</div>
@@ -98,7 +100,7 @@ const ManageFaculty = () => {
 
             {/* Main Table Card */}
             <div className="bg-white border border-gray-200 rounded shadow-sm print:border-none print:shadow-none">
-                
+
                 {/* Purple Header Card - HIDDEN ON PRINT */}
                 <div className="bg-purple-600 text-white px-4 py-3 flex justify-between items-center print:hidden rounded-t">
                     <h3 className="font-semibold text-sm tracking-wide">Faculty Directory Results</h3>
@@ -111,11 +113,11 @@ const ManageFaculty = () => {
 
                 {/* Toolbar: Entries, Exports, Search - HIDDEN ON PRINT */}
                 <div className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-200 bg-[#fafafa] print:hidden">
-                    
+
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="flex items-center text-sm text-gray-600">
-                            <select 
-                                value={limit} 
+                            <select
+                                value={limit}
                                 onChange={(e) => setLimit(Number(e.target.value))}
                                 className="border border-gray-300 p-1.5 rounded outline-none mr-2 bg-white text-gray-700 focus:border-purple-600"
                             >
@@ -140,8 +142,8 @@ const ManageFaculty = () => {
                     {/* Search Input */}
                     <div className="flex items-center text-sm">
                         <label className="mr-2 font-medium text-gray-600">Search:</label>
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="border border-gray-300 p-1.5 rounded outline-none w-full sm:w-48 bg-white focus:border-purple-600 focus:ring-1 focus:ring-purple-600 transition-all"
@@ -180,7 +182,21 @@ const ManageFaculty = () => {
                                     <tr key={teacher.id} className="border-b border-gray-100 hover:bg-purple-50 transition-colors print:border-b print:border-gray-200">
                                         <td className="p-3 border-r border-gray-200 text-gray-500 print:border-none">{startEntry + index + 1}</td>
                                         <td className="p-3 border-r border-gray-200 font-mono font-medium text-gray-800 print:border-none">{teacher.institutional_id}</td>
-                                        <td className="p-3 border-r border-gray-200 font-medium text-[#2a3f54] print:border-none">{teacher.name}</td>
+                                        <td className="p-4 text-sm font-medium relative group">
+
+                                            <Link
+                                                to={`/admin/user/${teacher.id}`}
+                                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                            >
+                                                {teacher.name}
+                                            </Link>
+
+                                            {/* 2. The Custom Tooltip */}
+                                            <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-sm whitespace-nowrap z-10">
+                                                Open Profile
+                                            </span>
+
+                                        </td>
                                         <td className="p-3 text-gray-600 print:border-none">{teacher.email}</td>
                                     </tr>
                                 ))
@@ -200,31 +216,31 @@ const ManageFaculty = () => {
                     <div className="mb-4 md:mb-0">
                         Showing {totalEntries === 0 ? 0 : startEntry + 1} to {endEntry} of {totalEntries} entries
                     </div>
-                    
+
                     {/* Standard DataTables Pagination */}
                     <div className="flex border border-gray-300 rounded overflow-hidden shadow-sm">
-                        <button 
-                            onClick={() => setPage(1)} 
+                        <button
+                            onClick={() => setPage(1)}
                             disabled={page === 1}
                             className="px-3 py-1.5 bg-white hover:bg-gray-50 border-r border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >«</button>
-                        <button 
-                            onClick={() => setPage(p => Math.max(1, p - 1))} 
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={page === 1}
                             className="px-3 py-1.5 bg-white hover:bg-gray-50 border-r border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >‹</button>
-                        
+
                         <button className="px-4 py-1.5 bg-purple-600 text-white font-medium border-r border-purple-600">
                             {page}
                         </button>
-                        
-                        <button 
-                            onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
+
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages || totalPages === 0}
                             className="px-3 py-1.5 bg-white hover:bg-gray-50 border-r border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >›</button>
-                        <button 
-                            onClick={() => setPage(totalPages)} 
+                        <button
+                            onClick={() => setPage(totalPages)}
                             disabled={page === totalPages || totalPages === 0}
                             className="px-3 py-1.5 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >»</button>

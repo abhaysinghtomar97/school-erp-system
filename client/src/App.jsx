@@ -34,6 +34,7 @@ import FeeDashboard from './pages/Admin/FeeDashboard';
 import InvoiceManager from './pages/Admin/InvoiceManager';
 import FeeSettings from './pages/Admin/FeeSettings';
 import FeeHistory from './pages/Admin/FeeHistory';
+import UserProfile from './pages/Admin/UserProfile';
 
 
 
@@ -77,7 +78,7 @@ function App() {
             <Route path="create_invoice" element={<InvoiceManager/>} />
             <Route path="fee_settings" element={<FeeSettings />} />
             <Route path="/admin/fee-history" element={<FeeHistory />} />
-
+            <Route path="/admin/user/:id" element={<UserProfile />} />
           </Route>
 
           {/* 🔒 NESTED FACULTY ROUTES 🔒 */}

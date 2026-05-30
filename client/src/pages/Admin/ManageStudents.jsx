@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
+import { Link } from 'react-router-dom';
 
 const ManageStudents = () => {
     // --- Data State ---
@@ -198,7 +199,21 @@ const ManageStudents = () => {
                                         {/* Serial Number calculation based on current page */}
                                         <td className="p-3 border-r border-gray-200 text-gray-500">{startEntry + index + 1}</td>
                                         <td className="p-3 border-r border-gray-200 font-mono font-medium text-gray-800">{student.institutional_id}</td>
-                                        <td className="p-3 border-r border-gray-200 font-medium text-[#2a3f54]">{student.name}</td>
+                                        <td className="p-4 text-sm font-medium relative group">
+
+                                            <Link
+                                                to={`/admin/user/${student.id}`}
+                                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                            >
+                                                {student.name}
+                                            </Link>
+
+                                            {/* 2. The Custom Tooltip */}
+                                            <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-sm whitespace-nowrap z-10">
+                                                Open Profile
+                                            </span>
+
+                                        </td>
                                         <td className="p-3 border-r border-gray-200 text-gray-600">{student.email}</td>
                                         <td className="p-3 border-r border-gray-200 print:border-none">
                                             {student.current_class ? (

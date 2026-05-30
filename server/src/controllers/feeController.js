@@ -274,11 +274,72 @@ const getFeeHistory = async (req, res) => {
     }
 };
 
-// Don't forget to export it at the bottom!
-module.exports = {
-    // ... your existing exports ...
-    getFeeHistory
+// Fetch 12-Month Fee Ledger for a specific student
+const getStudentFeeLedger = async (req, res) => {
+    const { studentId } = req.params;
+
+    try {
+        // This query groups all invoices by month. 
+        // If they owe Academic + Transport in May, it sums them.
+        // If ANY invoice in that month is UNPAID, the whole month glows Red.
+        const query = `
+            SELECT 
+                fee_month,
+                SUM(total_amount) AS total_amount,
+                CASE 
+                    WHEN COUNT(CASE WHEN status = 'UNPAID' THEN 1 END) > 0 THEN 'UNPAID'
+                    ELSE 'PAID'
+                END AS status
+            FROM student_invoices
+            WHERE student_id = $1
+            GROUP BY fee_month;
+        `;
+        
+        const { rows } = await pool.query(query, [studentId]);
+        
+        return res.status(200).json({ 
+            success: true, 
+            invoices: rows 
+        });
+    } catch (error) {
+        console.error('Error fetching student ledger:', error);
+        return res.status(500).json({ error: 'Failed to fetch fee ledger.' });
+    }
 };
+const payMonthDues = async (req, res) => {
+    const { studentId, feeMonth, amountPaid, paymentMethod } = req.body;
+
+    try {
+        // 1. Mark all unpaid invoices for this student in this month as PAID
+        const updateQuery = `
+            UPDATE student_invoices 
+            SET status = 'PAID' 
+            WHERE student_id = $1 AND fee_month = $2 AND status = 'UNPAID'
+            RETURNING id;
+        `;
+        const { rows: updatedInvoices } = await pool.query(updateQuery, [studentId, feeMonth]);
+
+        if (updatedInvoices.length === 0) {
+            return res.status(400).json({ error: 'No unpaid invoices found for this month.' });
+        }
+
+        // 2. Record the master transaction in the history table
+        const insertTxn = `
+            INSERT INTO transactions (invoice_id, amount, payment_method, payment_date)
+            VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        `;
+        // We link the transaction to the first invoice updated just for referencing
+        await pool.query(insertTxn, [updatedInvoices[0].id, amountPaid, paymentMethod]);
+
+        return res.status(200).json({ success: true, message: 'Payment successful.' });
+
+    } catch (error) {
+        console.error('Error processing monthly payment:', error);
+        return res.status(500).json({ error: 'Payment processing failed.' });
+    }
+};
+
+
 
 
 module.exports = {
@@ -289,7 +350,9 @@ module.exports = {
     getFeeTypes,
     getFeeStructures,
     createFeeStructure,
-    getFeeHistory
+    getFeeHistory,
+    getStudentFeeLedger,
+    payMonthDues
 
     
 }
