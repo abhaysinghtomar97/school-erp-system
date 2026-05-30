@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import { Link } from 'react-router-dom';
+import AlertPopup from '../../components/AlertPopup';
 
 const ManageStudents = () => {
     // --- Data State ---
@@ -57,7 +58,8 @@ const ManageStudents = () => {
     const filteredStudents = students.filter(student =>
         student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         student.institutional_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (student.is_first_login? 'yes' : 'no').includes(searchTerm.toLowerCase())
     );
 
     const totalEntries = filteredStudents.length;
@@ -110,7 +112,9 @@ const ManageStudents = () => {
             <div className="mb-6">
                 <div className="text-sm text-gray-500 mb-1">Home / Manage Students</div>
                 <h1 className="text-3xl font-bold text-[#2a3f54]">Manage Students</h1>
+                
             </div>
+                <AlertPopup msg="Students having <First Login>  They Need to Change password by login with ID/Pass sent on Email" />
 
             {error && (
                 <div className="p-4 mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-sm">
@@ -180,6 +184,7 @@ const ManageStudents = () => {
                                 <th className="p-3 border-r border-gray-200 font-semibold">Student Name</th>
                                 <th className="p-3 border-r border-gray-200 font-semibold">Email Address</th>
                                 <th className="p-3 border-r border-gray-200 font-semibold print:border-none">Classes</th>
+                                <th className="p-3 border-r border-gray-200 font-semibold print:border-none">First Login</th>
                                 <th className="p-3 border-r border-gray-200 font-semibold print:border-none">Status</th>
                                 <th className="p-3 font-semibold text-center w-32">Action</th>
                             </tr>
@@ -195,7 +200,9 @@ const ManageStudents = () => {
                                 </tr>
                             ) : currentStudents.length > 0 ? (
                                 currentStudents.map((student, index) => (
+
                                     <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+
                                         {/* Serial Number calculation based on current page */}
                                         <td className="p-3 border-r border-gray-200 text-gray-500">{startEntry + index + 1}</td>
                                         <td className="p-3 border-r border-gray-200 font-mono font-medium text-gray-800">{student.institutional_id}</td>
@@ -222,6 +229,15 @@ const ManageStudents = () => {
                                                 <span className="text-gray-400 italic text-xs">Unassigned</span>
                                             )}
                                         </td>
+                                        {/* column for is_first_login */}
+                                        <td className="p-3 border-r border-gray-200 print:border-none">
+                                            {student.is_first_login ? (
+                                                <span className="text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded">Yes</span>
+                                            ) : (
+                                                <span className="text-xs font-semibold text-green-700 bg-green-100  px-2 py-1 rounded">No</span>
+                                            )}
+                                        </td>
+
                                         <td className="p-3 border-r border-gray-200">
                                             {student.is_active ? (
                                                 <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded">Active</span>

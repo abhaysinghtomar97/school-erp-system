@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../services/api';
 import StudentFeeLedger from './StudentFeeLedger';
+import EditableField from '../../components/EditableField';
+
 // Update path if necessary
 
 // --- Skeleton Loader for the Profile ---
@@ -83,6 +85,28 @@ const UserProfile = () => {
             alert("Failed to process payment. Please try again.");
         } finally {
             setIsProcessing(false);
+        }
+    };
+
+    // The master update function
+    const handleUpdateField = async (fieldKey, newValue) => {
+        try {
+            // Send the specific field and value to your backend
+            await API.patch(`/users/${id}/profile`, {
+                field: fieldKey,
+                value: newValue
+            });
+
+
+            // Update the local React state so the UI instantly reflects the change
+            setProfile((prev) => ({
+                ...prev,
+                [fieldKey]: newValue
+            }));
+
+        } catch (error) {
+            alert("Failed to update field. Please try again.");
+            throw error; // Throwing ensures the EditableField component knows it failed
         }
     };
 
@@ -181,32 +205,76 @@ const UserProfile = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Contact Details</h3>
-                            <ul className="space-y-3 text-sm">
-                                <li><strong className="text-gray-500 block">Phone Number</strong> {profile.phone_number || 'N/A'}</li>
-                                <li><strong className="text-gray-500 block">Address</strong> {profile.address || 'N/A'}</li>
-                                {profile.role === 'STUDENT' && (
-                                    <li><strong className="text-gray-500 block">Emergency Contact</strong> {profile.emergency_contact || 'N/A'}</li>
-                                )}
+                            <ul className="space-y-4">
+                                <EditableField
+                                    label="Parent/Guardian Name"
+                                    value={profile.parent_name}
+                                    fieldKey="parent_name"
+                                    onSave={handleUpdateField}
+                                />
+                                <EditableField
+                                    label="Phone Number"
+                                    value={profile.mobile_number}
+                                    fieldKey="mobile_number"
+                                    onSave={handleUpdateField}
+                                />
+                                <EditableField
+                                    label="Address"
+                                    value={profile.address}
+                                    fieldKey="address"
+                                    onSave={handleUpdateField}
+                                />
+
                             </ul>
                         </div>
 
                         <div>
                             <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Profile Data</h3>
-                            <ul className="space-y-3 text-sm">
-                                {profile.role === 'STUDENT' ? (
+                            <ul>
+                                <EditableField
+                                    label="Emergency Contact"
+                                    value={profile.emergency_contact}
+                                    fieldKey="emergency_contact"
+                                    onSave={handleUpdateField}
+                                />
+                                <EditableField
+                                    label="Date of Birth"
+                                    value={profile.date_of_birth ? new Date(profile.date_of_birth).toISOString().split('T')[0] : ''}
+                                    fieldKey="date_of_birth"
+                                    type="date"
+                                    onSave={handleUpdateField}
+                                />
+                                <EditableField
+                                    label="Blood Group"
+                                    value={profile.blood_group}
+                                    fieldKey="blood_group"
+                                    onSave={handleUpdateField}
+                                />
+                            </ul>
+
+                            <ul className="space-y-4">
+                                {profile.role === 'TEACHER' && (
                                     <>
-                                        <li><strong className="text-gray-500 block">Parent/Guardian Name</strong> {profile.parent_name || 'N/A'}</li>
-                                        <li><strong className="text-gray-500 block">Date of Birth</strong> {profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : 'N/A'}</li>
-                                        <li><strong className="text-gray-500 block">Blood Group</strong> {profile.blood_group || 'N/A'}</li>
+                                        <EditableField
+                                            label="Department"
+                                            value={profile.department}
+                                            fieldKey="department"
+                                            onSave={handleUpdateField}
+                                        />
+                                        <EditableField
+                                            label="Designation"
+                                            value={profile.designation}
+                                            fieldKey="designation"
+                                            onSave={handleUpdateField}
+                                        />
+                                        <EditableField
+                                            label="Hire Date"
+                                            value={profile.hire_date ? new Date(profile.hire_date).toISOString().split('T')[0] : ''}
+                                            fieldKey="hire_date"
+                                            type="date"
+                                            onSave={handleUpdateField}
+                                        />
                                     </>
-                                ) : profile.role === 'TEACHER' ? (
-                                    <>
-                                        <li><strong className="text-gray-500 block">Department</strong> {profile.department || 'N/A'}</li>
-                                        <li><strong className="text-gray-500 block">Designation</strong> {profile.designation || 'N/A'}</li>
-                                        <li><strong className="text-gray-500 block">Hire Date</strong> {profile.hire_date ? new Date(profile.hire_date).toLocaleDateString() : 'N/A'}</li>
-                                    </>
-                                ) : (
-                                    <li><strong className="text-gray-500 block">Admin Privileges</strong> Super Admin</li>
                                 )}
                             </ul>
                         </div>

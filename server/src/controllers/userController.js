@@ -1,7 +1,13 @@
 const pool = require('../config/db.js');
 
+
 const getUserProfile = async (req, res) => {
-    const { id } = req.params;
+    // Safely grab the ID from the URL params, or fallback to the authenticated user's ID
+    const targetId = req.params.id || req.user?.id;
+
+    if (!targetId) {
+        return res.status(400).json({ error: 'User ID is required to fetch a profile.' });
+    }
 
     try {
         // STEP 1: Fetch the core user to determine their role
@@ -10,8 +16,8 @@ const getUserProfile = async (req, res) => {
             FROM users 
             WHERE id = $1;
         `;
-        const { rows: baseRows } = await pool.query(baseUserQuery, [id]);
-            
+        const { rows: baseRows } = await pool.query(baseUserQuery, [targetId]);
+
         if (baseRows.length === 0) {
             return res.status(404).json({ error: 'User not found in the system.' });
         }
@@ -24,34 +30,33 @@ const getUserProfile = async (req, res) => {
                 SELECT 
                     sp.date_of_birth, sp.blood_group, sp.parent_name, 
                     sp.parent_phone, sp.emergency_contact, sp.address,
-                    e.id, c.name, e.academic_year
+                    e.class_id, c.name, e.academic_year
                 FROM student_profiles sp
-                -- We use LEFT JOIN for enrolments just in case they haven't been assigned a class yet
-                LEFT JOIN enrolments e ON sp.user_id = e.id AND e.is_active = true
+                -- Use LEFT JOIN so the query succeeds even if they aren't assigned a class yet
+                LEFT JOIN enrolments e ON sp.user_id = e.student_id AND e.is_active = true
                 LEFT JOIN classes c ON e.class_id = c.id
                 WHERE sp.user_id = $1;
             `;
-            const { rows: studentRows } = await pool.query(studentQuery, [id]);
+            const { rows: studentRows } = await pool.query(studentQuery, [targetId]);
             
-            // Merge the student specific data into the main profile object
             if (studentRows.length > 0) {
                 userProfile = { ...userProfile, ...studentRows[0] };
             }
 
-        } else if (userProfile.role === 'TEACHER') {
-            const teacherQuery = `
+        } else if (userProfile.role === 'TEACHER' || userProfile.role === 'FACULTY') {
+            const facultyQuery = `
                 SELECT department, designation, qualification, hire_date
                 FROM faculty_profiles
                 WHERE user_id = $1;
             `;
-            const { rows: teacherRows } = await pool.query(teacherQuery, [id]);
+            const { rows: facultyRows } = await pool.query(facultyQuery, [targetId]);
             
-            if (teacherRows.length > 0) {
-                userProfile = { ...userProfile, ...teacherRows[0] };
+            if (facultyRows.length > 0) {
+                userProfile = { ...userProfile, ...facultyRows[0] };
             }
         }
 
-        // STEP 3: Send the clean, combined object to React
+        // STEP 3: Return the clean, combined object
         return res.status(200).json({
             success: true,
             profile: userProfile
@@ -63,6 +68,54 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+
+const updateProfileField = async (req, res) => {
+    const targetId = req.params.id;
+    const { field, value } = req.body;
+
+    // Notice how these now exactly match your database screenshots!
+    const usersTableFields = ['name', 'mobile_number']; // Changed to mobile_number
+    const studentTableFields = ['date_of_birth', 'blood_group', 'parent_name', 'parent_phone', 'emergency_contact', 'address'];
+    const facultyTableFields = ['department', 'designation', 'qualification', 'hire_date', 'address']; // Added address here
+
+    try {
+        let query = '';
+        let queryValues = [value, targetId];
+        
+        if (usersTableFields.includes(field)) {
+            query = `UPDATE users SET ${field} = $1 WHERE id = $2 RETURNING *`;
+            await pool.query(query, queryValues);
+        } 
+        else if (studentTableFields.includes(field)) {
+            query = `
+                INSERT INTO student_profiles (user_id, ${field}) 
+                VALUES ($2, $1) 
+                ON CONFLICT (user_id) DO UPDATE SET ${field} = EXCLUDED.${field}
+                RETURNING *
+            `;
+            await pool.query(query, queryValues);
+        } 
+        else if (facultyTableFields.includes(field)) {
+            query = `
+                INSERT INTO faculty_profiles (user_id, ${field}) 
+                VALUES ($2, $1) 
+                ON CONFLICT (user_id) DO UPDATE SET ${field} = EXCLUDED.${field}
+                RETURNING *
+            `;
+            await pool.query(query, queryValues);
+        } 
+        else {
+            return res.status(400).json({ error: `Invalid field: ${field} is not allowed.` });
+        }
+
+        return res.status(200).json({ success: true, message: `${field} updated successfully.` });
+
+    } catch (error) {
+        console.error('Error updating profile field:', error);
+        return res.status(500).json({ error: 'Server error while updating profile.' });
+    }
+};
 module.exports = {
-    getUserProfile
+    getUserProfile,
+    updateProfileField
 };
