@@ -118,7 +118,7 @@ function App() {
             </ProtectedRoute>
           } /> 
 
-          <Route path="*" element={<h2 style={{ textAlign: 'center', marginTop: '50px' }}>404 - Page Not Found</h2>} />
+          <Route path="*" element={<h2 style={{ textAlign: 'center', marginTop: '50px' }}>404 - On Development Phase</h2>} />
         </Routes>
       </Router>
     </AuthProvider>
