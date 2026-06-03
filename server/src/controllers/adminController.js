@@ -18,7 +18,16 @@ const getdashboard = async (req, res) => {
                 (SELECT COUNT(*) FROM users WHERE role = 'TEACHER') AS faculty,
                 (SELECT COUNT(*) FROM classes) AS classes
         `;
-
+        const presentToday = `
+         SELECT 
+            (SELECT COUNT(*) 
+            FROM attendance 
+            WHERE date = CURRENT_DATE AND status IN ('Present', 'Late')) AS students,
+            
+            (SELECT COUNT(*) 
+            FROM faculty_attendance 
+            WHERE date = CURRENT_DATE AND status IN ('Present', 'Late')) AS faculty;
+`;
         // 2. Notices Query
         const noticesQuery = `
             SELECT n.id, n.title, n.content, n.target_audience, n.created_at, u.name as author_name 
@@ -35,17 +44,21 @@ const getdashboard = async (req, res) => {
             WHERE id = $1
         `;
 
-        const [statsResult, noticesResult, userResult] = await Promise.all([
+
+        // 4. Execute Queries in Parallel
+        const [statsResult, noticesResult, userResult, presentTodayResult] = await Promise.all([
             pool.query(statsQuery),
             pool.query(noticesQuery),
-            pool.query(userQuery, [userId])
+            pool.query(userQuery, [userId]),
+            pool.query(presentToday)
         ]);
 
         // final data object
         const dashboardData = {
+            presentToday: presentTodayResult.rows[0],
             stats: statsResult.rows[0],
             notices: noticesResult.rows,
-            user: userResult.rows[0]
+            user: userResult.rows[0],
         };
 
 
@@ -332,7 +345,7 @@ const enrollStudent = async (req, res) => {
 const archiveStudentenrolment = async (req, res) => {
     const { student_id, academic_year } = req.body;
     const admin_id = req.user?.id;
-    
+
 
     if (!admin_id) {
         return res.status(401).json({ message: 'Unauthorized: Admin context missing.' });

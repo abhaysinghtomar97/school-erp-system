@@ -11,6 +11,7 @@ const AdminDashboard = () => {
 
     // --- State ---
     const [stats, setStats] = useState({ students: 0, faculty: 0, classes: 0 });
+    const [presentToday, setPresentToday] = useState({ students: 0, faculty: 0 });
     const [notices, setNotices] = useState([]);
     const [newNotice, setNewNotice] = useState({ title: '', content: '', target_audience: 'ALL' });
     const [posting, setPosting] = useState(false);
@@ -32,11 +33,16 @@ const AdminDashboard = () => {
 
             // PostgreSQL COUNT() returns strings, so we parse them into numbers
             setStats({
+                
                 students: parseInt(response.data.stats.students) || 0,
                 faculty: parseInt(response.data.stats.faculty) || 0,
                 classes: parseInt(response.data.stats.classes) || 0
             });
-
+            setPresentToday({
+                students: parseInt(response.data.presentToday.students) || 0,
+                faculty: parseInt(response.data.presentToday.faculty) || 0
+            });
+            
             setNotices(response.data.notices || []);
 
 
@@ -126,8 +132,8 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p className="text-gray-500 text-sm font-medium">Total Students</p>
-                        <h3 className="text-3xl font-bold text-blue-600 mt-1">{stats.students}</h3>
+                        <p className="text-gray-500 text-sm font-medium">Today's Students Attandence</p>
+                        <h3 className="text-3xl font-bold text-blue-600 mt-1">{presentToday.students}/{stats.students}</h3>
                     </div>
                     <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center text-xl"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                         <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clipRule="evenodd" />
@@ -137,8 +143,8 @@ const AdminDashboard = () => {
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div>
-                        <p className="text-gray-500 text-sm font-medium">Total Faculty</p>
-                        <h3 className="text-3xl font-bold text-purple-600 mt-1">{stats.faculty}</h3>
+                        <p className="text-gray-500 text-sm font-medium">Today's Faculty Attendance</p>
+                        <h3 className="text-3xl font-bold text-purple-600 mt-1">{presentToday.faculty}/{stats.faculty}</h3>
                     </div>
                     <div className="w-12 h-12 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center text-xl">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">

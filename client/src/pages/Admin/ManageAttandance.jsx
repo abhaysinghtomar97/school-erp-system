@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
-
+import AlertPopup from '../../components/AlertPopup';
 const ManageAttendance = () => {
     // --- State ---
     const [activeTab, setActiveTab] = useState('STUDENTS'); // 'STUDENTS' or 'FACULTY'
@@ -116,7 +116,7 @@ const ManageAttendance = () => {
 
     return (
         <div className="max-w-6xl mx-auto font-sans text-gray-800 space-y-6">
-            
+            <AlertPopup msg="After Marking Attendance, please save your changes!" />
             {/* Header & Tabs */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
