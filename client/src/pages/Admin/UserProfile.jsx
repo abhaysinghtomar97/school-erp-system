@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../../services/api';
 import StudentFeeLedger from './StudentFeeLedger';
 import EditableField from '../../components/EditableField';
+import UserAttendance from './UserAttendance';
 
 // Update path if necessary
 
@@ -34,13 +35,13 @@ const ProfileSkeleton = () => (
 );
 
 const UserProfile = () => {
-    const { id } = useParams(); // Gets the ID from the URL
+    const { id } = useParams(); 
     const navigate = useNavigate();
 
     const [profile, setProfile] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('personal'); // 'personal', 'academic', 'fees'
+    const [activeTab, setActiveTab] = useState('personal'); // 'personal', 'attendance', 'academic', 'fees'
 
     // ==========================================
     // 2. NEW PAYMENT MODAL STATE & FUNCTION HERE
@@ -49,11 +50,9 @@ const UserProfile = () => {
     const [selectedInvoice, setSelectedInvoice] = useState(null);
 
     const handleOpenPayment = (invoice) => {
-
         setSelectedInvoice(invoice);
         setIsPaymentModalOpen(true);
     };
-
 
     // 1. Add these two new states
     const [isProcessing, setIsProcessing] = useState(false);
@@ -96,7 +95,6 @@ const UserProfile = () => {
                 field: fieldKey,
                 value: newValue
             });
-
 
             // Update the local React state so the UI instantly reflects the change
             setProfile((prev) => ({
@@ -157,8 +155,16 @@ const UserProfile = () => {
                 {/* Core Info */}
                 <div className="flex-1 text-center md:text-left">
                     <h1 className="text-3xl font-bold text-gray-800">{profile.name}</h1>
-                    <div className="text-gray-500 font-medium mt-1">ID: {profile.institutional_id}</div>
 
+                    <div className='flex gap-4'>
+                        <div className="text-gray-500 font-medium mt-1">ID: <b>{profile.institutional_id}</b></div>
+                        {profile.role === 'STUDENT' && (
+                            <>
+                                <div className="text-gray-500 font-medium mt-1">Class: <b>{profile.c_name} </b></div>
+                                <div className="text-gray-500 font-medium mt-1">Session: <b>{profile.academic_year} </b></div>
+                            </>
+                        )}
+                    </div>
                     <div className="mt-3 flex flex-wrap justify-center md:justify-start gap-3 text-sm">
                         <span className="flex items-center gap-1 bg-gray-50 border px-2 py-1 rounded text-gray-600">
                             📧 {profile.email}
@@ -177,6 +183,14 @@ const UserProfile = () => {
                     className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'personal' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                 >
                     Overview & Personal
+                </button>
+
+                {/* ATTENDANCE TAB - Visible to EVERYONE */}
+                <button
+                    onClick={() => setActiveTab('attendance')}
+                    className={`pb-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'attendance' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                >
+                    Attendance Record
                 </button>
 
                 {/* Only show Academic & Fees tabs if they are a student */}
@@ -201,108 +215,92 @@ const UserProfile = () => {
             {/* --- TAB CONTENT --- */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 min-h-[300px]">
 
+                {/* 1. PERSONAL TAB */}
                 {activeTab === 'personal' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Contact Details</h3>
-                            <ul className="space-y-4">
-                                <EditableField
-                                    label="Parent/Guardian Name"
-                                    value={profile.parent_name}
-                                    fieldKey="parent_name"
-                                    onSave={handleUpdateField}
-                                />
-                                <EditableField
-                                    label="Phone Number"
-                                    value={profile.mobile_number}
-                                    fieldKey="mobile_number"
-                                    onSave={handleUpdateField}
-                                />
-                                <EditableField
-                                    label="Address"
-                                    value={profile.address}
-                                    fieldKey="address"
-                                    onSave={handleUpdateField}
-                                />
+                        
+                        {/* CONDITIONAL RENDER BASED ON ROLE */}
+                        {profile.role === 'STUDENT' ? (
+                            <>
+                                {/* STUDENT FIELDS - COLUMN 1 */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Student Information</h3>
+                                    <ul className="space-y-4">
+                                        <EditableField label="Mobile Number" value={profile.mobile_number} fieldKey="mobile_number" onSave={handleUpdateField} />
+                                        <EditableField label="Date of Birth" value={profile.date_of_birth ? new Date(profile.date_of_birth).toISOString().split('T')[0] : ''} fieldKey="date_of_birth" type="date" onSave={handleUpdateField} />
+                                        <EditableField label="Blood Group" value={profile.blood_group} fieldKey="blood_group" onSave={handleUpdateField} />
+                                        <EditableField label="Registration Date" value={profile.registration_date ? new Date(profile.registration_date).toISOString().split('T')[0] : ''} fieldKey="registration_date" type="date" onSave={handleUpdateField} />
+                                    </ul>
+                                </div>
 
-                            </ul>
-                        </div>
+                                {/* STUDENT FIELDS - COLUMN 2 */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Family & Contact</h3>
+                                    <ul className="space-y-4">
+                                        <EditableField label="Parent/Guardian Name" value={profile.parent_name} fieldKey="parent_name" onSave={handleUpdateField} />
+                                        <EditableField label="Parent Mobile" value={profile.parent_mobile} fieldKey="parent_mobile" onSave={handleUpdateField} />
+                                        <EditableField label="Emergency Contact" value={profile.emergency_contact} fieldKey="emergency_contact" onSave={handleUpdateField} />
+                                        <EditableField label="Address" value={profile.address} fieldKey="address" onSave={handleUpdateField} />
+                                    </ul>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                {/* FACULTY FIELDS - COLUMN 1 */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Faculty Information</h3>
+                                    <ul className="space-y-4">
+                                        <EditableField label="Mobile Number" value={profile.mobile_number} fieldKey="mobile_number" onSave={handleUpdateField} />
+                                        <EditableField label="Department" value={profile.department} fieldKey="department" onSave={handleUpdateField} />
+                                        <EditableField label="Designation" value={profile.designation} fieldKey="designation" onSave={handleUpdateField} />
+                                    </ul>
+                                </div>
 
-                        <div>
-                            <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Profile Data</h3>
-                            <ul>
-                                <EditableField
-                                    label="Emergency Contact"
-                                    value={profile.emergency_contact}
-                                    fieldKey="emergency_contact"
-                                    onSave={handleUpdateField}
-                                />
-                                <EditableField
-                                    label="Date of Birth"
-                                    value={profile.date_of_birth ? new Date(profile.date_of_birth).toISOString().split('T')[0] : ''}
-                                    fieldKey="date_of_birth"
-                                    type="date"
-                                    onSave={handleUpdateField}
-                                />
-                                <EditableField
-                                    label="Blood Group"
-                                    value={profile.blood_group}
-                                    fieldKey="blood_group"
-                                    onSave={handleUpdateField}
-                                />
-                            </ul>
-
-                            <ul className="space-y-4">
-                                {profile.role === 'TEACHER' && (
-                                    <>
-                                        <EditableField
-                                            label="Department"
-                                            value={profile.department}
-                                            fieldKey="department"
-                                            onSave={handleUpdateField}
-                                        />
-                                        <EditableField
-                                            label="Designation"
-                                            value={profile.designation}
-                                            fieldKey="designation"
-                                            onSave={handleUpdateField}
-                                        />
-                                        <EditableField
-                                            label="Hire Date"
-                                            value={profile.hire_date ? new Date(profile.hire_date).toISOString().split('T')[0] : ''}
-                                            fieldKey="hire_date"
-                                            type="date"
-                                            onSave={handleUpdateField}
-                                        />
-                                    </>
-                                )}
-                            </ul>
-                        </div>
+                                {/* FACULTY FIELDS - COLUMN 2 */}
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Professional Data</h3>
+                                    <ul className="space-y-4">
+                                        <EditableField label="Qualification" value={profile.qualification} fieldKey="qualification" onSave={handleUpdateField} />
+                                        <EditableField label="Hire Date" value={profile.hire_date ? new Date(profile.hire_date).toISOString().split('T')[0] : ''} fieldKey="hire_date" type="date" onSave={handleUpdateField} />
+                                    </ul>
+                                </div>
+                            </>
+                        )}
                     </div>
                 )}
 
+                {/* 2. ATTENDANCE TAB (Visible to everyone) */}
+                {activeTab === 'attendance' && (
+                    <div>
+                        <UserAttendance userId={id} />
+                    </div>
+                )}
+
+                {/* 3. ACADEMIC TAB (Students Only) */}
                 {activeTab === 'academic' && profile.role === 'STUDENT' && (
                     <div>
                         <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Current Enrollment</h3>
                         <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 inline-block">
                             <div className="text-sm text-blue-600 font-bold mb-1">Academic Year: {profile.academic_year || 'Not Assigned'}</div>
-                            <div className="text-2xl font-black text-gray-800">Class: {profile.class_name || 'Not Assigned'}</div>
+                            <div className="text-2xl font-black text-gray-800">Class: {profile.c_name || 'Not Assigned'}</div>
                         </div>
-                        {/* Later you can add Attendance % or Grades here */}
                     </div>
                 )}
 
+                {/* 4. FEES TAB (Students Only) */}
                 {activeTab === 'fees' && profile.role === 'STUDENT' && (
                     <div>
                         <StudentFeeLedger
                             studentId={id}
-                            onPayClick={handleOpenPayment} // <-- PASS THE FUNCTION HERE
+                            onPayClick={handleOpenPayment} 
                             refreshTrigger={refreshLedger}
                         />
                     </div>
                 )}
 
             </div>
+            
+            {/* Payment Modal remains unchanged below */}
             {isPaymentModalOpen && selectedInvoice && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative">

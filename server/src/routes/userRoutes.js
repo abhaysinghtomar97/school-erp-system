@@ -14,4 +14,6 @@ router.get('/:id/profile', verifyToken, checkRole(['ADMIN']), userController.get
 router.get('/me/profile', verifyToken, userController.getUserProfile);
 router.patch('/:id/profile', verifyToken, checkRole(['ADMIN']), userController.updateProfileField);
 
+router.get('/:id/attendance',verifyToken, userController.getUserAttendance);
+
 module.exports = router;

@@ -4,7 +4,6 @@ const pool = require('../config/db.js');
 const getUserProfile = async (req, res) => {
     // Safely grab the ID from the URL params, or fallback to the authenticated user's ID
     const targetId = req.params.id || req.user?.id;
-
     if (!targetId) {
         return res.status(400).json({ error: 'User ID is required to fetch a profile.' });
     }
@@ -17,20 +16,22 @@ const getUserProfile = async (req, res) => {
             WHERE id = $1;
         `;
         const { rows: baseRows } = await pool.query(baseUserQuery, [targetId]);
-
+      
         if (baseRows.length === 0) {
             return res.status(404).json({ error: 'User not found in the system.' });
         }
 
         let userProfile = { ...baseRows[0] };
+        
 
         // STEP 2: Fetch specific data based on the role
         if (userProfile.role === 'STUDENT') {
+            
             const studentQuery = `
                 SELECT 
                     sp.date_of_birth, sp.blood_group, sp.parent_name, 
                     sp.parent_phone, sp.emergency_contact, sp.address,
-                    e.class_id, c.name, e.academic_year
+                    e.class_id, c.name as c_name, e.academic_year 
                 FROM student_profiles sp
                 -- Use LEFT JOIN so the query succeeds even if they aren't assigned a class yet
                 LEFT JOIN enrolments e ON sp.user_id = e.student_id AND e.is_active = true
@@ -42,6 +43,7 @@ const getUserProfile = async (req, res) => {
             if (studentRows.length > 0) {
                 userProfile = { ...userProfile, ...studentRows[0] };
             }
+            
 
         } else if (userProfile.role === 'TEACHER' || userProfile.role === 'FACULTY') {
             const facultyQuery = `
@@ -55,7 +57,8 @@ const getUserProfile = async (req, res) => {
                 userProfile = { ...userProfile, ...facultyRows[0] };
             }
         }
-
+    
+        
         // STEP 3: Return the clean, combined object
         return res.status(200).json({
             success: true,
@@ -64,7 +67,7 @@ const getUserProfile = async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching user profile:', error);
-        return res.status(500).json({ error: 'Server error while fetching profile data.' });
+        return res.status(500).json({error: 'Server error while fetching profile data.' });
     }
 };
 
@@ -115,7 +118,68 @@ const updateProfileField = async (req, res) => {
         return res.status(500).json({ error: 'Server error while updating profile.' });
     }
 };
+
+
+
+
+
+// controllers/userController.js
+
+const getUserAttendance = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // 1. Get user role
+        const userQuery = `SELECT role FROM users WHERE id = $1`;
+        const userResult = await pool.query(userQuery, [id]);
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const role = userResult.rows[0].role;
+        let summary = { Present: 0, Absent: 0, Late: 0};
+
+        // 2. Ask the DB to group and count the statuses (Lightning Fast)
+        let countQuery = "";
+        if (role === 'STUDENT') {
+            countQuery = `
+                SELECT status, COUNT(*) as count 
+                FROM attendance 
+                WHERE student_id = $1 
+                GROUP BY status
+            `;
+        } else if (role === 'TEACHER') {
+            countQuery = `
+                SELECT status, COUNT(*) as count 
+                FROM faculty_attendance 
+                WHERE teacher_id = $1 
+                GROUP BY status
+            `;
+        }
+
+        if (countQuery) {
+            const result = await pool.query(countQuery, [id]);
+            
+            
+            result.rows.forEach(row => {
+                // Ensure we map the status exactly as it comes from the DB
+                if (summary[row.status] !== undefined) {
+                    summary[row.status] = parseInt(row.count, 10);
+                }
+            });
+        }
+
+        // 3. Send ONLY the tiny summary object to React
+        return res.status(200).json({ summary });
+
+    } catch (error) {
+        console.error("Attendance fetch error:", error);
+        return res.status(500).json({ message: "Failed to fetch attendance summary" });
+    }
+};
 module.exports = {
     getUserProfile,
-    updateProfileField
+    updateProfileField,
+    getUserAttendance
 };
