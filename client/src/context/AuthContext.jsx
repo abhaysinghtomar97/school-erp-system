@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (userData) => {
-        setUser(userData); // Just update state, no localStorage needed
+        setUser(userData); //
     };
 
     const logout = async () => {

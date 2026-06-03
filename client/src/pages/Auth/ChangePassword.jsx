@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../services/api';
 import { jwtDecode } from 'jwt-decode';
+import { useContext } from 'react';
+import { AuthContext } from '../../context/AuthContext';
+
 
 const ChangePassword = () => {
     const [passwords, setPasswords] = useState({ newPassword: '', confirmPassword: '' });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+
+    // 1. Consume the user object directly from your AuthContext
+    const { user } = useContext(AuthContext); 
 
     const handleChange = (e) => {
         setPasswords({ ...passwords, [e.target.name]: e.target.value });
@@ -18,7 +24,7 @@ const ChangePassword = () => {
         setError('');
         setSuccess('');
 
-        // 1. Frontend Safety Check
+        // 2. Frontend Safety Checks
         if (passwords.newPassword !== passwords.confirmPassword) {
             return setError("Passwords do not match!");
         }
@@ -26,32 +32,29 @@ const ChangePassword = () => {
             return setError("Password must be at least 6 characters long.");
         }
 
-        try {
-            // 2. Grab the token and silently extract the User ID
-            const token = localStorage.getItem('token');
-            if (!token) {
-                return setError("You are not logged in. Please go back to the login page.");
-            }
-            
-            const decodedToken = jwtDecode(token);
-            // Note: Make sure your Node.js login route puts the user's ID inside the token!
-            // It is usually stored as decodedToken.id or decodedToken.userId
-            const userId = decodedToken.id || decodedToken.userId; 
+        // 3. Ensure AuthContext has successfully loaded the user
+        if (!user) {
+            return setError("You are not logged in. Please log in again.");
+        }
 
-            // 3. Send the exact JSON package Node.js is expecting
-            const response = await API.post('/auth/change-password', {
+        try {
+            // Extract the ID from the context user object
+            const userId = user.id || user.userId; 
+            console.log(userId)
+
+            // 4. Send the exact JSON package Node.js is expecting
+            await API.post('/auth/change-password', {
                 userId: userId,
                 newPassword: passwords.newPassword
             });
 
-            // 4. Show success and redirect!
+            // 5. Show success and redirect using context role!
             setSuccess("Password updated successfully! Redirecting to your dashboard...");
 
-            // Wait 2 seconds so they can read the success message, then route them
             setTimeout(() => {
-                if (decodedToken.role === 'ADMIN') navigate('/admin');
-                else if (decodedToken.role === 'TEACHER') navigate('/faculty');
-                else if (decodedToken.role === 'STUDENT') navigate('/student');
+                if (user.role === 'ADMIN') navigate('/admin');
+                else if (user.role === 'TEACHER') navigate('/faculty');
+                else if (user.role === 'STUDENT') navigate('/student');
                 else navigate('/login');
             }, 2000);
 
@@ -59,6 +62,8 @@ const ChangePassword = () => {
             setError(err.response?.data?.message || 'Failed to change password. Please try again.');
         }
     };
+
+    
 
     return (
         <div style={{ maxWidth: '400px', margin: '50px auto', fontFamily: 'sans-serif' }}>
@@ -98,6 +103,6 @@ const ChangePassword = () => {
             </form>
         </div>
     );
-};
 
+};
 export default ChangePassword;

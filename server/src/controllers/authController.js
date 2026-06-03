@@ -36,14 +36,14 @@ async function login(req, res) {
         // 4. Sign Token (Ensure JWT_SECRET is in your .env)
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
 
-       res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production"
-        ? "none"
-        : "lax",
-    maxAge: 8 * 60 * 60 * 1000
-});
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production"
+                ? "none"
+                : "lax",
+            maxAge: 8 * 60 * 60 * 1000
+        });
 
         return res.json({ token, user: payload, message: "Logged in" });
     } catch (err) {
@@ -54,7 +54,10 @@ async function login(req, res) {
 
 
 async function changePassword(req, res) {
-    const { userId, newPassword } = req.body; // Later, userId will come from the JWT token
+    const {  newPassword } = req.body;
+    const userId = req.user.id;
+   
+    
 
     try {
         const salt = await bcrypt.genSalt(10);

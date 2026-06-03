@@ -6,7 +6,7 @@ const router = express.Router();
 
 
 router.post('/login', authController.login)
-router.post('/change-password', authController.changePassword)
+router.post('/change-password',verifyToken, authController.changePassword)
 
 // 1. Session Verification Route
 // If they have a valid cookie, verifyToken lets them through and we send back their decoded user info

@@ -26,7 +26,7 @@ const Login = () => {
             
             const {  user } = response.data;
             
-            // Save the user to local storage
+            
             login(user)
             
           
