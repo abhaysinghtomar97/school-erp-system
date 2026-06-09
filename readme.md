@@ -2,7 +2,7 @@
 
 «A secure, role-based School ERP System built for educational institutions with JWT authentication, admin-controlled user provisioning, and first-login password reset enforcement.»
 
-"Dashboard Screenshot" (./screenshots/dashboard.png)
+"Dashboard Screenshot" (./Screenshots/dashboard.png)
 
 ---
 
@@ -42,16 +42,16 @@
 ## 📸 Screenshots
 
 ### Login Page
-![Login](./screenshots/login.png)
+![Login](./Screenshots/login.png)
 
 ### Admin Dashboard
-![Dashboard](./screenshots/dashboard.png)
+![Dashboard](./Screenshots/dashboard.png)
 
 ### User Management
-![Users](./screenshots/users.png)
+![Users](./Screenshots/users.png)
 
 ### Change Password
-![Password](./screenshots/password.png)
+![Password](./Screenshots/password.png)
 
 ---
 
