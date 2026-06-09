@@ -39,13 +39,19 @@
 
 ---
 
-📸 Screenshots
+## 📸 Screenshots
 
-Login Page| Admin Dashboard
-"Login" (./screenshots/login.png)| "Dashboard" (./screenshots/dashboard.png)
+### Login Page
+![Login](./screenshots/login.png)
 
-User Management| Change Password
-"Users" (./screenshots/users.png)| "Password" (./screenshots/password.png)
+### Admin Dashboard
+![Dashboard](./screenshots/dashboard.png)
+
+### User Management
+![Users](./screenshots/users.png)
+
+### Change Password
+![Password](./screenshots/password.png)
 
 ---
 
@@ -119,6 +125,7 @@ school-erp-system/
 
 🚀 Installation
 
+```text
 Clone Repository
 
 git clone <your-repository-url>
@@ -144,11 +151,11 @@ JWT_SECRET=your_jwt_secret
 
 EMAIL_USER=your_email@gmail.com
 EMAIL_APP_PASSWORD=your_app_password
-
+```
 ---
 
 Frontend Setup
-
+```text
 cd client
 npm install
 
@@ -159,11 +166,13 @@ npm install react-router-dom axios jwt-decode
 Create ".env"
 
 VITE_API_BASE_URL=http://localhost:5000/api
+```
 
 ---
 
 🗄 Database Schema
 
+```text
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TYPE user_role AS ENUM (
@@ -181,7 +190,7 @@ role user_role NOT NULL,
 is_first_login BOOLEAN DEFAULT TRUE,
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+```
 ---
 
 ▶️ Running The Project
