@@ -49,36 +49,34 @@ User Management| Change Password
 
 ---
 
-🛠 Tech Stack
+## 🛠 Tech Stack
 
-Category| Technology
-Frontend| React.js (Vite)
-Routing| React Router v6
-Backend| Node.js + Express.js
-Database| PostgreSQL
-Authentication| JWT + bcryptjs
-Email Service| Nodemailer
-API Client| Axios
-
+- **Frontend:** React.js (Vite)
+- **Routing:** React Router v6
+- **Backend:** Node.js + Express.js
+- **Database:** PostgreSQL
+- **Authentication:** JWT + bcryptjs
+- **Email Service:** Nodemailer
+- **API Client:** Axios
 ---
 
 📂 Project Structure
 
-<details>
-<summary>Click to expand</summary>school-erp-system
+```text
+school-erp-system/
 │
-├── client
-│   ├── public
-│   ├── src
-│   │   ├── assets
-│   │   ├── components
-│   │   ├── context
-│   │   ├── hooks
-│   │   ├── layouts
-│   │   ├── pages
-│   │   ├── routes
-│   │   ├── services
-│   │   ├── utils
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── layouts/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   │
@@ -86,25 +84,29 @@ API Client| Axios
 │   ├── package.json
 │   └── vite.config.js
 │
-├── server
-│   ├── src
-│   │   ├── config
-│   │   ├── controllers
-│   │   ├── middlewares
-│   │   ├── models
-│   │   ├── routes
-│   │   ├── services
-│   │   ├── utils
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
 │   │   ├── app.js
 │   │   └── server.js
 │   │
 │   ├── .env
 │   └── package.json
 │
+├── screenshots/
+│   ├── login.png
+│   ├── dashboard.png
+│   ├── users.png
+│   └── password.png
+│
 ├── .gitignore
 └── README.md
-
-</details>---
 
 ⚙️ Prerequisites
 
@@ -112,7 +114,7 @@ API Client| Axios
 - Git
 - PostgreSQL Database
 - Gmail App Password
-
+```
 ---
 
 🚀 Installation
