@@ -7,7 +7,7 @@ class MailService {
     static async sendEmail({ to, subject, html }) {
         try {
             const { data, error } = await resend.emails.send({
-                from: 'Golden Valley ERP <noreply@erp-gvs.in>',
+                from: 'Golden Valley ERP <admin@erp-gvs.in>',
                 to,
                 subject,
                 html,

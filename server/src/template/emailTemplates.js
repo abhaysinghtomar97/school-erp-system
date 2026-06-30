@@ -31,6 +31,8 @@ const newUserCredentialsTemplate = (name, role, institutionalId, tempPassword) =
             <p style="margin: 0; font-size: 14px; color: #475569;"><strong>Temporary Password:</strong> <br/>
                 <span style="font-family: ui-monospace, monospace; font-size: 16px; color: #0f172a; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${tempPassword}</span>
             </p>
+
+            <p>Click here to Create Password - <a href="https://www.erp-gvs.in/">erp-gvs.in</a></p>
         </div>
 
         <p style="font-size: 14px; color: #b91c1c; background-color: #fef2f2; padding: 12px; border-radius: 6px; border: 1px solid #fecaca;">
