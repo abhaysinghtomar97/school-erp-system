@@ -1,145 +1,250 @@
-# Full-Stack School ERP System
-# folder structure...
+🎓 Full-Stack School ERP System
 
-school-erp-system/
-├── client/                     # React Frontend Environment
-│   ├── public/                 # Static assets (favicon, etc.)
-│   ├── src/
-│   │   ├── assets/             # Images, icons, and global stylesheets
-│   │   ├── components/         # Reusable UI components (Buttons, Modals, Navbar)
-│   │   ├── context/            # React Context (AuthContext for user state)
-│   │   ├── hooks/              # Custom React hooks (useAuth, useFetch)
-│   │   ├── layouts/            # Page layouts (DashboardLayout, AuthLayout)
-│   │   ├── pages/              # Route components (Login, AdminDashboard, ChangePassword)
-│   │   ├── routes/             # React Router setup (ProtectedRoute.jsx)
-│   │   ├── services/           # API calls (axios instance, auth endpoints)
-│   │   ├── utils/              # Helper functions (date formatters, validators)
-│   │   ├── App.jsx             # Main application component
-│   │   └── main.jsx            # React entry point
-│   ├── .env                    # Frontend environment variables (API URLs)
-│   ├── package.json
-│   └── vite.config.js          # Vite configuration (recommended over CRA)
-│
-├── server/                     # Node.js/Express Backend Environment
-│   ├── src/
-│   │   ├── config/             # Configuration files (db.js, nodemailer.js)
-│   │   ├── controllers/        # Route logic (authController.js, adminController.js)
-│   │   ├── middlewares/        # Custom middleware (authMiddleware.js, errorHandler.js)
-│   │   ├── models/             # Database queries or ORM models
-│   │   ├── routes/             # API route definitions (authRoutes.js, userRoutes.js)
-│   │   ├── services/           # Complex business logic (emailService.js)
-│   │   ├── utils/              # Backend helpers (jwtGenerator.js, hashPassword.js)
-│   │   ├── app.js              # Express app setup and middleware configuration
-│   │   └── server.js           # Server entry point (app.listen)
-│   ├── .env                    # Backend environment variables (DB secrets, JWT secret)
-│   └── package.json
-│
-├── .gitignore                  # Global gitignore (node_modules, .env)
-└── README.md                   # Project documentation
+«A secure, role-based School ERP System built for educational institutions with JWT authentication, admin-controlled user provisioning, and first-login password reset enforcement.»
 
-A secure, role-based Enterprise Resource Planning (ERP) system designed for educational institutions. It features an Admin dashboard for account provisioning, secure JWT-based authentication, and a forced password-reset flow for new users.
+"Dashboard Screenshot" (./Screenshots/dashboard.png)
+
+---
+
+✨ Features
+
+🔐 Authentication & Security
+
+- JWT-based authentication
+- Password hashing with bcryptjs
+- Protected routes
+- Role-based access control
+- First-login password reset enforcement
+
+👨‍💼 Admin Features
+
+- Create Teacher accounts
+- Create Student accounts
+- Manage users
+- Account provisioning system
+
+📧 Email Integration
+
+- Temporary password delivery
+- Password reset emails
+- Gmail SMTP via Nodemailer
+
+🏫 ERP Modules
+
+- User Management
+- Student Management
+- Teacher Management
+- Authentication System
+- Dashboard Analytics
+
+---
+
+## 📸 Screenshots
+
+### Login Page
+![Login](./Screenshots/login.png)
+
+### Admin Dashboard
+![Dashboard](./Screenshots/dashboard.png)
+
+### User Management
+![Users](./Screenshots/users.png)
+
+### Change Password
+![Password](./Screenshots/password.png)
+
+---
 
 ## 🛠 Tech Stack
-* **Frontend:** React.js (Vite), React Router v6
-* **Backend:** Node.js, Express.js
-* **Database:** PostgreSQL (Hosted on Neon.tech / Supabase)
-* **Authentication:** JSON Web Tokens (JWT), bcryptjs
-* **Email Service:** Nodemailer (Gmail integration)
 
-## 📋 Prerequisites
-Before you begin, ensure you have the following installed on your machine:
-* [Node.js](https://nodejs.org/) (v16 or higher)
-* Git
-* A free PostgreSQL database (via [Neon.tech](https://neon.tech/) or local Docker container)
-* A Google Account with an "App Password" generated for Nodemailer.
+- **Frontend:** React.js (Vite)
+- **Routing:** React Router v6
+- **Backend:** Node.js + Express.js
+- **Database:** PostgreSQL
+- **Authentication:** JWT + bcryptjs
+- **Email Service:** Nodemailer
+- **API Client:** Axios
+---
 
-## 🚀 Installation & Setup
+📂 Project Structure
 
-Follow these steps to get your development environment set up.
+```text
+school-erp-system/
+│
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── hooks/
+│   │   ├── layouts/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   ├── .env
+│   ├── package.json
+│   └── vite.config.js
+│
+├── server/
+│   ├── src/
+│   │   ├── config/
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── app.js
+│   │   └── server.js
+│   │
+│   ├── .env
+│   └── package.json
+│
+├── screenshots/
+│   ├── login.png
+│   ├── dashboard.png
+│   ├── users.png
+│   └── password.png
+│
+├── .gitignore
+└── README.md
 
-### 1. Clone the Repository
-\`\`\`bash
+⚙️ Prerequisites
+
+- Node.js (v16+)
+- Git
+- PostgreSQL Database
+- Gmail App Password
+```
+---
+
+🚀 Installation
+
+```text
+Clone Repository
+
 git clone <your-repository-url>
 cd school-erp-system
-\`\`\`
 
-### 2. Backend Setup
-Navigate to the server directory and install dependencies:
-\`\`\`bash
+Backend Setup
+
 cd server
 npm install
-\`\`\`
 
-**Required Backend Dependencies:**
-\`\`\`bash
+Install dependencies:
+
 npm install express pg bcryptjs jsonwebtoken nodemailer cors dotenv
 npm install --save-dev nodemon
-\`\`\`
 
-**Environment Variables (Server):**
-Create a `.env` file in the `server/` directory and add the following:
-\`\`\`env
+Create ".env"
+
 PORT=5000
-DATABASE_URL=your_postgresql_connection_string
-JWT_SECRET=your_super_secret_jwt_key
-EMAIL_USER=your_gmail_address@gmail.com
-EMAIL_APP_PASSWORD=your_16_digit_gmail_app_password
-\`\`\`
 
-### 3. Frontend Setup
-Open a new terminal, navigate to the client directory, and install dependencies:
-\`\`\`bash
+DATABASE_URL=your_database_url
+
+JWT_SECRET=your_jwt_secret
+
+EMAIL_USER=your_email@gmail.com
+EMAIL_APP_PASSWORD=your_app_password
+```
+---
+
+Frontend Setup
+```text
 cd client
 npm install
-\`\`\`
 
-**Required Frontend Dependencies:**
-\`\`\`bash
+Install dependencies:
+
 npm install react-router-dom axios jwt-decode
-\`\`\`
 
-**Environment Variables (Client):**
-Create a `.env` file in the `client/` directory:
-\`\`\`env
+Create ".env"
+
 VITE_API_BASE_URL=http://localhost:5000/api
-\`\`\`
+```
 
-### 4. Database Initialization
-Connect to your PostgreSQL database using a tool like pgAdmin, DBeaver, or the Neon SQL Editor, and execute the initial schema:
+---
 
-\`\`\`sql
+🗄 Database Schema
+
+```text
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE TYPE user_role AS ENUM ('ADMIN', 'TEACHER', 'STUDENT');
+
+CREATE TYPE user_role AS ENUM (
+'ADMIN',
+'TEACHER',
+'STUDENT'
+);
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role user_role NOT NULL,
-    is_first_login BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+name VARCHAR(255) NOT NULL,
+email VARCHAR(255) UNIQUE NOT NULL,
+password_hash TEXT NOT NULL,
+role user_role NOT NULL,
+is_first_login BOOLEAN DEFAULT TRUE,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-\`\`\`
-*Note: You will need to manually insert your first ADMIN user directly into the database to bootstrap the system.*
+```
+---
 
-## 💻 Running the Application
+▶️ Running The Project
 
-**Start the Backend Server:**
-\`\`\`bash
+Start Backend
+
 cd server
-npm run dev # Assuming you set up a nodemon script in package.json
-\`\`\`
-*The server will start on `http://localhost:5000`*
+npm run dev
 
-**Start the React Frontend:**
-\`\`\`bash
+Runs at:
+
+http://localhost:5000
+
+Start Frontend
+
 cd client
 npm run dev
-\`\`\`
-*The frontend will start on `http://localhost:5173` (default Vite port)*
 
-## 🔐 Security Features
-* **Admin-Only Provisioning:** Open registration is disabled. Only Admin roles can create Student/Teacher accounts.
-* **First-Login Intercept:** New users receive a temporary password via email and are forced to update it before accessing any protected routes.
-* **Stateless Authentication:** Sessions are managed securely via JWTs.
+Runs at:
+
+http://localhost:5173
+
+---
+
+🔐 Security Features
+
+- Admin-only account creation
+- JWT authentication
+- Password hashing
+- Protected API routes
+- First-login password reset flow
+- Environment variable protection
+
+---
+
+📈 Future Improvements
+
+- Attendance Management
+- Fee Management
+- Timetable Module
+- Result Management
+- Parent Portal
+- Notifications System
+
+---
+
+👨‍💻 Author
+
+Abhay
+
+Built as a learning-focused full-stack project using modern web technologies.
+
+---
+
+⭐ Support
+
+If you found this project helpful, consider giving it a star on GitHub.
